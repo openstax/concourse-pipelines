@@ -1,0 +1,42 @@
+git-private-key: |
+    -----BEGIN RSA PRIVATE KEY-----
+    MIIEogIBAAKCAQEAv2NwpbUHcaUByu4+PrcfIhqeDIsbub6qnJNY9ozKt9iUrkBH
+    Qt7dVQ9zw1qPFznv2Z8Zt1CvwHH2vv7A8+Dg2ObT9Is23SIckqUSYFCA4Q9KV6AW
+    eo7fi1ai8lpFtS+01AZzoi/nTAV15WI78QZaWGf8Esy2EA9vTdNIXENs80+91GjB
+    yMOnSOfGEk4uTLX26GWWHsWwF9Uyl64ATPv1YLh2VkN2jLil2Vug9MJKdlNIoIyi
+    h1/n3KPUKTtit0u2RZ7I89q4QACq0bdlQfQ59lA9OdnTlCMu4F1FRGsyeiMmSYSq
+    MOSjETzjq+DOMwv1Q4rKBgntXtC5BMP/E9qOrQIDAQABAoIBAAYKCT/xWm7Hmirh
+    Ia2w8ZaN6HbU3OcbkR6nt6LwBmWOvAJTnOwLREiu2CRN8z30YhEn6BPUw/b6oaKd
+    P1FywyWVAxMwYWbQ8L3f35iScb6oUNw6/PqZD4zCCxpCpvh0rOwT2ApCILZRZcr7
+    MpEEdk1b2qRtOUGAey6lgB8JMaLrz0K0Kun1wREnNDYufF2z0PZco4HbwwlacXOq
+    Hcrtb81+wRau9I46FPaIROcja2cB/HTGnSWl/shBt/QTqSLH9vDwh3mz/1YO780g
+    5Ue+8RearazC/R76rAV2jBy2zG68M47kVX5xL24bBJI8BuGERbQCwLW+VToR7ptU
+    uUjTKrECgYEA5kFh/yOasuS+RGGI4DlMr0Z0zFQ3bhX2/958/6JPKvMq4otT0tL2
+    eQs1of2Facrmyi7SOBg0PpYhZe02VEXNAPjZu/GT0/M30N7xOoCgJJRbS8JvuB6Y
+    C5ywIeiCFgQvHFhcn4vG+3VY126LthXGzQSJ8ZirTIXzop81b230nZsCgYEA1MmQ
+    tgCuxP2hKt1/K+Lc0YOJkAsEfci9qkrSvbC2WyXuzgtNUeCMzCwTvqrxTFCjB0NM
+    QFAU1JI1KLBuYFaerkFyTpbkObV6YpsLMRzoCLA4n1amx4hiqHJmInXLQmYHj7+n
+    QEY1MNt2x8B6F+xai702uqfq4yY2oOLqleS6bVcCgYB/tt5jRV1mQshiZ3MjY8Ts
+    J3lbaI8CSb6iN8c/h8i/uvcbh0psUsWRaC1Md7GLd5bBqGzD3nEEEgPeZE/ROJI4
+    Ks+ilqF3W52nBjHpUDUDdSKah/OtvZJ6RmPPuwaErbdv0nc1q7MoAPPRMqjdy4Bk
+    cVMOJa9GF7qGhiZ+cw/OZwKBgHFivvPcxUQ/CmR3Bs7x4kzaVLEmzcvg7gASQt3F
+    jkZfnjK5HwhkKWKakiLloBLUXSr/l2AlzBPBnQYDja1UOtYMFcb+7Lo7k+17RKl1
+    B8epb2Kon9JvQHMWEoqGTjshdyIINC0xvCI+r7qdO/IHhfA0cTdhRu6nbDCq+enJ
+    qfWdAoGAHA2jQ/BXwfWv+1iklRLJyOmzbCD2qSLAU8I1b2xOMt8Z1ufp8+qN4zGj
+    6bByRI6KOYj6BLrJNn/Dn+y6VpI39QXGnHnAGO4WKhjbOOw0DDW1deFIfXTQ1gNF
+    vFCW2AStBGlUlrb86dLHGj4+r9SmlptjC5a39O6q5s31GOZEKn8=
+    -----END RSA PRIVATE KEY-----
+git-author-name: First Last
+git-author-email: first@example.org
+cnx-deploy-branch: update-rex-redirects-staging
+
+openstax-host: staging.openstax.org
+archive-host: archive-staging.cnx.org
+
+# github.com -> top right dropdown menu -> settings -> developer settings -> personal access tokens
+#   scope: public_repo
+github-token: ddce5dc0db5146eea35f88d63cb104f0
+
+# reviewers cannot include PR author
+# github usernames separated by commas
+reviewers: username1,username2
