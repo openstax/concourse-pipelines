@@ -1,0 +1,101 @@
+resource_types:
+- name: curl
+  type: docker-image
+  source:
+    repository: pivotalservices/concourse-curl-resource
+    tag: latest
+
+resources:
+- name: rex-environment-json
+  type: curl
+  source:
+    url: https://((openstax-host))/rex/environment.json
+    filename: environment.json
+
+- name: cnx-deploy
+  type: git
+  source:
+    uri: git@github.com:openstax/cnx-deploy.git
+    private_key: ((git-private-key))
+
+- name: cnx-deploy-branch
+  type: git
+  source:
+    uri: git@github.com:openstax/cnx-deploy.git
+    branch: ((cnx-deploy-branch))
+    private_key: ((git-private-key))
+    git_config:
+    - name: user.email
+      value: ((git-author-email))
+    - name: user.name
+      value: ((git-author-name))
+
+- name: concourse-pipelines
+  type: git
+  source:
+    uri: https://github.com/openstax/concourse-pipelines.git
+
+jobs:
+- name: job-update-rex-redirects
+  plan:
+  - get: rex-environment-json
+    trigger: true
+  - get: cnx-deploy
+  - get: concourse-pipelines
+
+  - task: update-uri-maps
+    config:
+      platform: linux
+      image_resource:
+        type: docker-image
+        source:
+          repository: python
+          tag: 3.7-buster
+      inputs:
+      - name: cnx-deploy
+      - name: concourse-pipelines
+      outputs:
+      - name: cnx-deploy-updated
+      run:
+        path: /bin/bash
+        args:
+        - -c
+        - |
+          cp -r cnx-deploy cnx-deploy-updated && \
+          cd cnx-deploy-updated/cnx-deploy && \
+          ../../concourse-pipelines/rex-redirects/update_uri_map.sh
+    params:
+      OPENSTAX_HOST: ((openstax-host))
+      ARCHIVE_HOST: ((archive-host))
+      CNX_DEPLOY_BRANCH: ((cnx-deploy-branch))
+      GIT_AUTHOR_EMAIL: ((git-author-email))
+      GIT_AUTHOR_NAME: ((git-author-name))
+
+  - put: cnx-deploy-branch
+    params:
+      repository: cnx-deploy-updated/cnx-deploy
+      force: true
+
+  - task: create-pr
+    config:
+      platform: linux
+      image_resource:
+        type: docker-image
+        source:
+          repository: python
+          tag: 3.7-buster
+      inputs:
+      - name: cnx-deploy-updated
+      - name: concourse-pipelines
+      run:
+        path: /bin/bash
+        args:
+        - -c
+        - |
+          cd cnx-deploy-updated/cnx-deploy && \
+          ../../concourse-pipelines/rex-redirects/create_pr.sh
+    params:
+      HUB_VERSION: 2.12.3
+      GITHUB_TOKEN: ((github-token))
+      CNX_DEPLOY_BRANCH: ((cnx-deploy-branch))
+      REVIEWERS: ((reviewers))
