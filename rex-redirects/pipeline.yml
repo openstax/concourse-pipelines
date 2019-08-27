@@ -33,7 +33,9 @@ resources:
 - name: concourse-pipelines
   type: git
   source:
-    uri: https://github.com/openstax/concourse-pipelines.git
+    #uri: https://github.com/openstax/concourse-pipelines.git
+    uri: https://github.com/karenc/concourse-pipelines.git
+    branch: rex-redirects
 
 jobs:
 - name: job-update-rex-redirects
