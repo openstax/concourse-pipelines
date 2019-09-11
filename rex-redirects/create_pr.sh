@@ -12,5 +12,5 @@ tar xf "hub-linux-amd64-$HUB_VERSION.tgz" "hub-linux-amd64-$HUB_VERSION/bin/hub"
 # check whether PR already exists
 if [ -z "$("hub-linux-amd64-$HUB_VERSION/bin/hub" pr list -h "$CNX_DEPLOY_BRANCH")" ]
 then
-  "hub-linux-amd64-$HUB_VERSION/bin/hub" pull-request -f --no-edit -r "$REVIEWERS"
+  "hub-linux-amd64-$HUB_VERSION/bin/hub" pull-request -f --no-edit -a "$ASSIGNEES"
 fi

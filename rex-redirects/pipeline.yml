@@ -98,4 +98,4 @@ jobs:
       HUB_VERSION: 2.12.3
       GITHUB_TOKEN: ((github-token))
       CNX_DEPLOY_BRANCH: ((cnx-deploy-branch))
-      REVIEWERS: ((reviewers))
+      ASSIGNEES: ((assignees))
