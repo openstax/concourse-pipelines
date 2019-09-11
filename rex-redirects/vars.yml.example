@@ -37,6 +37,5 @@ archive-host: archive-staging.cnx.org
 #   scope: public_repo
 github-token: ddce5dc0db5146eea35f88d63cb104f0
 
-# reviewers cannot include PR author
 # github usernames separated by commas
-reviewers: username1,username2
+assignees: username1,username2
