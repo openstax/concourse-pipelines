@@ -1,0 +1,47 @@
+---
+
+resources:
+  - name: oer-exports
+    type: git
+    source:
+      uri: git@github.com:openstax/oer.exports.git
+      private_key: ((git-private-key))
+      tag_filter: '*'
+
+  - name: concourse-pipelines
+    type: git
+    source:
+      uri: https://github.com/openstax/concourse-pipelines.git
+
+jobs:
+  - name: release oer.exports
+    plan:
+      - get: oer-exports
+        trigger: true
+
+      - get: concourse-pipelines
+
+      - task: release-oer-exports
+        config:
+          platform: linux
+          image_resource:
+            type: docker-image
+            source:
+              repository: shimizukawa/python-all
+
+          inputs:
+            - name: oer-exports
+            - name: concourse-pipelines
+          outputs:
+            - name: rhaptos-print-updated
+          run:
+            path: concourse-pipelines/release-oer-exports/release-oer-exports.sh
+
+        params:
+          DIST_RHAPTOS_USERNAME: ((dist-rhaptos-username))
+          DIST_RHAPTOS_PASSWORD: ((dist-rhaptos-password))
+          DIST_RHAPTOS_URL: http://dist.rhaptos.org
+          RHAPTOS_PRINT_REPO_URL: git@github.com:Rhaptos/Products.RhaptosPrint.git
+          GIT_PRIVATE_KEY: ((git-private-key))
+          GIT_USER_EMAIL: ((git-user-email))
+          GIT_USER_NAME: ((git-user-name))
