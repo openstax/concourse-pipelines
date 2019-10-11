@@ -21,7 +21,7 @@ $GIT_PRIVATE_KEY
 EOF
 chmod 600 $HOME/.ssh/id_rsa
 
-set +x
+set -x
 
 # Install git
 apt-get update && apt-get install -y git
