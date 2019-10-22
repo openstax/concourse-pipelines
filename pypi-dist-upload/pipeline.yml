@@ -1,0 +1,39 @@
+---
+resources:
+  - name: github-repo
+    type: git
+    source:
+      uri: https://github.com/((github-repo)).git
+      tag_filter: '*'
+
+jobs:
+  - name: dist upload
+    public: true
+    serial: true
+    plan:
+      - get: github-repo
+        trigger: true
+      - task: twine upload
+        config:
+          platform: linux
+          image_resource:
+            type: docker-image
+            source:
+              repository: python
+              tag: 3
+
+          inputs:
+            - name: github-repo
+
+          run:
+            path: /bin/bash
+            args:
+              - -c
+              - |
+                cd github-repo && \
+                pip install -q twine && \
+                python setup.py ((setup-options)) && \
+                twine upload dist/*
+          params:
+            TWINE_USERNAME: ((pypi-username))
+            TWINE_PASSWORD: ((pypi-password))
