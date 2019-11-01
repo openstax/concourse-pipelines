@@ -20,7 +20,7 @@ jobs:
             type: docker-image
             source:
               repository: python
-              tag: 3
+              tag: ((python-image-tag))
 
           inputs:
             - name: github-repo
