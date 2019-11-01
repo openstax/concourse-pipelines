@@ -1,0 +1,3 @@
+github-repo: openstax/cnx-common
+setup-options: bdist_wheel --universal
+python-image-tag: 3
