@@ -1,0 +1,3 @@
+github-repo: openstax/cnx-rex-redirects
+setup-options: bdist_wheel
+python-image-tag: 3
