@@ -1,0 +1,3 @@
+github-repo: openstax/rhaptos.cnxmlutils
+setup-options: bdist_wheel --universal
+python-image-tag: 2.7
