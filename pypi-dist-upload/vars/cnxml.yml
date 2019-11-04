@@ -1,0 +1,3 @@
+github-repo: openstax/cnxml
+setup-options: bdist_wheel
+python-image-tag: 3
