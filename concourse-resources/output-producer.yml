@@ -24,16 +24,17 @@ resources:
                 image_resource:
                   type: docker-image
                   source: {repository: busybox}
+                outputs: [{name: 'tag-file'}],
                 run:
                   path: /bin/sh
                   args:
                     - -cxe
                     - |
-                      echo 'dev' > tag
+                      echo 'dev' > tag-file/tag
             - put: resource-image
               params:
                 build: source-code
-                tag_file: create-tag-file/tag
+                tag_file: tag-file/tag
                 tag_as_latest: false
           on_success:
             put: notify
