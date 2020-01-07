@@ -74,6 +74,7 @@ jobs:
                 cp output-producer-queued/id book/job_id
                 cp output-producer-queued/collection_id book/collection_id
                 cp output-producer-queued/version book/version
+                cp output-producer-queued/style book/style
                 cp output-producer-queued/content_server book/server
                 wget -q -O jq 'https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64' && chmod +x jq
                 server_name="$(cat output-producer-queued/job.json | ./jq -r '.content_server.name')"
@@ -87,7 +88,6 @@ jobs:
                   if [ "$book_colid" == "$(cat book/collection_id)" ]
                   then
                     echo -n "$book_name" >book/name
-                    echo -n "$recipe_name" >book/recipe
                   fi
                 done
                 echo -n "$(cat book/collection_id)-$(cat book/version)-${server_name}-$(cat book/job_id).pdf" >book/pdf_filename
