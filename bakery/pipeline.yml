@@ -259,7 +259,7 @@ jobs:
 
                 book_dir="mathified-book/$(cat book/name)"
 
-                prince -v --output="artifacts/$(cat book/pdf_filename).pdf"
+                prince -v --output="artifacts/$(cat book/pdf_filename)"
                 "$book_dir/collection.mathified.xhtml"
       - put: s3
         params:

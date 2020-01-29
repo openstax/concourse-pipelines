@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "build": "node ./pipeline.js",
+    "build": "node ./pipeline.js > pipeline.yml",
     "lint": "standard ./pipeline.js ./tasks/*"
   },
   "dependencies": {
