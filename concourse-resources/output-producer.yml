@@ -1,46 +1,103 @@
 ---
+resource-types:
+  - name: slack
+    type: docker-image
+    source:
+      repository: karenc/concourse-slack-resource
+
 resources:
   - name: source-code
     type: git
     source:
       uri: https://github.com/openstax/output-producer-resource.git
 
-  - name: resource-image
+  - name: source-code-tagged
+    type: git
+    source:
+      uri: https://github.com/openstax/output-producer-resource.git
+      tag_filter: '*'
+
+  - name: docker-hub-image
     type: docker-image
     source:
       repository: openstax/output-producer-resource
       username: ((docker-hub-username))
       password: ((docker-hub-password))
 
-      jobs:
-        - name: build-and-publish-image
-          public: true
-          plan:
-            - get: source-code
-              trigger: true
-            - task: create-tag-file
-              config:
-                platform: linux
-                image_resource:
-                  type: docker-image
-                  source: {repository: busybox}
-                outputs: [{name: 'tag-file'}],
-                run:
-                  path: /bin/sh
-                  args:
-                    - -cxe
-                    - |
-                      echo 'dev' > tag-file/tag
-            - put: resource-image
-              params:
-                build: source-code
-                tag_file: tag-file/tag
-                tag_as_latest: false
-          on_success:
-            put: notify
-            params:
-              text: ":white_check_mark: output-producer-resource docker image successfully uploaded to dockerhub."
-          on_failure:
-            put: notify
-            params:
-              text: ":warning: There was a problem building/uploading output-producer-resource docker image to dockerhub."
+  - name: notify
+    type: slack
+    source:
+      user_access_token: ((slack-user-token))
+      bot_access_token: ((slack-bot-token))
+      bot_user_id: ((slack-bot-user-id))
+
+jobs:
+  - name: build-and-publish-image
+    public: true
+    plan:
+      - get: source-code
+        trigger: true
+      - task: create-tag-file
+        config:
+          platform: linux
+          image_resource:
+            type: docker-image
+            source: {repository: busybox}
+          outputs: [{name: 'tag-file'}]
+          run:
+            path: /bin/sh
+            args:
+              - -cxe
+              - |
+                echo 'dev' > tag-file/tag
+      - put: docker-hub-image
+        params:
+          build: source-code
+          tag_file: tag-file/tag
+          tag_as_latest: false
+    on_success:
+      put: notify
+      params:
+        text: ":white_check_mark: `dev` output-producer-resource docker image successfully uploaded to dockerhub."
+    on_failure:
+      put: notify
+      params:
+        text: ":warning: There was a problem building/uploading `dev` output-producer-resource docker image to dockerhub."
+
+  - name: build-and-publish-tagged-image
+    public: true
+    plan:
+      - get: source-code-tagged
+        trigger: true
+      - task: create-tag-file
+        config:
+          platform: linux
+          image_resource:
+            type: docker-image
+            source: {repository: alpine/git}
+          inputs: [{name: 'source-code-tagged'}]
+          outputs: [{name: 'tag-files'}]
+          run:
+            path: /bin/sh
+            args:
+              - -cxe
+              - |
+                touch tag-files/additional tag-files/current
+                latest_tag=$(git --git-dir source-code-tagged/.git describe --tags --abbrev=0)
+                this_tag=$(git --git-dir source-code-tagged/.git for-each-ref refs/tags --sort=-taggerdate --format='%(refname:short)' --count=1)
+                echo "$this_tag" > tag-files/current
+                [[ "$this_tag" = "$latest_tag" ]] && echo 'latest' > tag-files/additional
+      - put: docker-hub-image
+        params:
+          additional_tags: tag-files/additional
+          build: source-code-tagged
+          tag_file: tag-files/current
+          tag_as_latest: false
+    on_success:
+      put: notify
+      params:
+        text: ":white_check_mark: `tagged` output-producer-resource docker image successfully uploaded to dockerhub."
+    on_failure:
+      put: notify
+      params:
+        text: ":warning: There was a problem building/uploading `tagged` output-producer-resource docker image to dockerhub."
