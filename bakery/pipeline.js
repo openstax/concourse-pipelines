@@ -53,7 +53,7 @@ const resources = [
     name: 'output-producer',
     type: 'output-producer',
     source: {
-      api_root: '((pdf-job-queue-url))',
+      api_root: 'https://cops.cnx.org/api',
       status_id: 1
     }
   },
@@ -95,7 +95,8 @@ const bakeryJob = {
     pdf_url: 'book/pdf_url'
   }),
   on_failure: reportToOutputProducer(Status.FAILED),
-  on_error: reportToOutputProducer(Status.FAILED),
+  // TODO: Uncomment this when upgrading to concourse >=5.0.1
+  // on_error: reportToOutputProducer(Status.FAILED),
   on_abort: reportToOutputProducer(Status.FAILED)
 }
 
@@ -120,5 +121,5 @@ const output = info + yaml.safeDump(config)
 if (outputFile) {
   fs.writeFileSync(outputFile, output)
 } else {
-  console.log(output)
+  fs.writeFileSync("pipeline.yml", output)
 }
