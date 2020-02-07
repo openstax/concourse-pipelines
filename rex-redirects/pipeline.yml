@@ -16,19 +16,19 @@ resources:
   type: git
   source:
     uri: git@github.com:openstax/cnx-deploy.git
-    private_key: ((git-private-key))
+    private_key: ((github-private-key))
 
 - name: cnx-deploy-branch
   type: git
   source:
     uri: git@github.com:openstax/cnx-deploy.git
-    branch: ((cnx-deploy-branch))
-    private_key: ((git-private-key))
+    branch: autogen-update-rex-redirects
+    private_key: ((github-private-key))
     git_config:
     - name: user.email
-      value: ((git-author-email))
+      value: ((github-username))
     - name: user.name
-      value: ((git-author-name))
+      value: ((github-username))
 
 - name: concourse-pipelines
   type: git
@@ -66,16 +66,14 @@ jobs:
           ../../concourse-pipelines/rex-redirects/update_uri_map.sh
     params:
       OPENSTAX_HOST: staging.openstax.org
-      ARCHIVE_HOST: ((archive-host))
-      CNX_DEPLOY_BRANCH: ((cnx-deploy-branch))
-      GIT_AUTHOR_EMAIL: ((git-author-email))
-      GIT_AUTHOR_NAME: ((git-author-name))
-
+      ARCHIVE_HOST: archive.cnx.org
+      CNX_DEPLOY_BRANCH: autogen-update-rex-redirects
+      GIT_AUTHOR_EMAIL: ((github-username))
+      GIT_AUTHOR_NAME: ((github-username))
   - put: cnx-deploy-branch
     params:
       repository: cnx-deploy-updated/cnx-deploy
       force: true
-
   - task: create-pr
     config:
       platform: linux
@@ -96,6 +94,6 @@ jobs:
           ../../concourse-pipelines/rex-redirects/create_pr.sh
     params:
       HUB_VERSION: 2.12.3
-      GITHUB_TOKEN: ((github-token))
-      CNX_DEPLOY_BRANCH: ((cnx-deploy-branch))
-      ASSIGNEES: ((assignees))
+      GITHUB_TOKEN: ((github-api-token))
+      CNX_DEPLOY_BRANCH: autogen-update-rex-redirects
+      ASSIGNEES: philschatz,m1yag1
