@@ -118,17 +118,8 @@ const config = {
   jobs: [bakeryJob]
 }
 
-const info = `
-########## This is a generated file ##########
-# To generate a pipeline.yml file you
-# can run 'yarn build [path/to/output-file]'
-# from the 'bakery/' directory. If no path
-# is specified, the output will be directed
-# to stdout.
-##############################################
-
-`
-const output = info + yaml.safeDump(config)
+const forward = fs.readFileSync('forward.yml', { encoding: 'utf8' })
+const output = forward + yaml.safeDump(config)
 
 if (outputFile) {
   fs.writeFileSync(outputFile, output)
