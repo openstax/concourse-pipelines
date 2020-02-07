@@ -6,13 +6,13 @@
 - Run `yarn install` or `yarn`.
 
 ### Generate a pipeline file for a particular environment
-Run `yarn build:<env>`
+Run `yarn build:<env> [output-path]`
 
-Available environments: `local`, `staging`, `prod`, `all`
+Available environments: `local`, `staging`, `prod`
 
 Example: `yarn build:staging`
 
-Note: Directory for output path must exist. If no path argument is given, the pipeline will output to stdout.
+Note: Directory for output path must exist if given or if no argument is given, the pipeline will output to stdout.
 
 ### Generate a standalone task file suitable for `fly execute`
 Run `yarn build:task <task-name> [yaml-object]`
@@ -23,6 +23,10 @@ Example: `yarn build:task look-up-book "{bucketName: my-bucket}"`
 Example: `yarn build:task bake-book"`
 
 Note: The optional `yaml-object` is passed directly to the task function as the first argument.
+
+### I don't like generating intermediate files to run `set-pipeline` or `execute`!
+Use process substitution!
+Example: `fly -t dev sp -p bakery -c <(yarn build:staging)`
 
 ### Development
 - There is no test suite in this repo, but a `yarn lint` command is provided to lint your work. This project uses `standard` to lint.
