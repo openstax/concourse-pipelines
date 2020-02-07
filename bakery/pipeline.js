@@ -1,7 +1,13 @@
 const fs = require('fs')
 const yaml = require('js-yaml')
 
-const env = require(`./env/${process.env.ENV}.json`)
+const env = (() => {
+  try {
+    return require(`./env/${process.env.ENV}.json`)
+  } catch {
+    console.error(`Warning: Could not find environment file: ./env/${process.env.ENV}.json`)
+  }
+})()
 
 const taskLookUpBook = require('./tasks/look-up-book')
 const taskFetchBook = require('./tasks/fetch-book')
