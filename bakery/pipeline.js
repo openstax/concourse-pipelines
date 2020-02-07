@@ -83,11 +83,11 @@ const bakeryJob = {
     { get: 'cnx-recipes' },
     taskLookUpBook({ bucketName: env.S3_BUCKET }),
     reportToOutputProducer(Status.PROCESSING),
-    taskFetchBook,
-    taskAssembleBook,
-    taskBakeBook,
-    taskMathifyBook,
-    taskBuildPdf,
+    taskFetchBook(),
+    taskAssembleBook(),
+    taskBakeBook(),
+    taskMathifyBook(),
+    taskBuildPdf(),
     {
       put: 's3',
       params: {

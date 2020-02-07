@@ -1,22 +1,23 @@
 const dedent = require('dedent')
 
-const task = {
-  task: 'fetch book',
-  config: {
-    platform: 'linux',
-    image_resource: {
-      type: 'docker-image',
-      source: {
-        repository: 'openstax/nebuchadnezzar'
-      }
-    },
-    inputs: [{ name: 'book' }],
-    outputs: [{ name: 'fetched-book' }],
-    run: {
-      path: '/bin/bash',
-      args: [
-        '-cxe',
-        dedent`
+const task = () => {
+  return {
+    task: 'fetch book',
+    config: {
+      platform: 'linux',
+      image_resource: {
+        type: 'docker-image',
+        source: {
+          repository: 'openstax/nebuchadnezzar'
+        }
+      },
+      inputs: [{ name: 'book' }],
+      outputs: [{ name: 'fetched-book' }],
+      run: {
+        path: '/bin/bash',
+        args: [
+          '-cxe',
+          dedent`
           exec 2> >(tee fetched-book/stderr >&2)
           cd fetched-book
           book_dir="$(cat ../book/name)"
@@ -29,7 +30,8 @@ const task = {
           EOF
           yes | neb get -r -d "$book_dir/raw" "$(cat ../book/server)" "$(cat ../book/collection_id)" "$(cat ../book/version)"
         `
-      ]
+        ]
+      }
     }
   }
 }

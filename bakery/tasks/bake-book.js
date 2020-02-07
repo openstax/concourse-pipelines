@@ -1,26 +1,27 @@
 const dedent = require('dedent')
 
-const task = {
-  task: 'bake book',
-  config: {
-    platform: 'linux',
-    image_resource: {
-      type: 'docker-image',
-      source: {
-        repository: 'openstax/cnx-easybake'
-      }
-    },
-    inputs: [
-      { name: 'book' },
-      { name: 'assembled-book' },
-      { name: 'cnx-recipes' }
-    ],
-    outputs: [{ name: 'baked-book' }],
-    run: {
-      path: '/bin/bash',
-      args: [
-        '-cxe',
-        dedent`
+const task = () => {
+  return {
+    task: 'bake book',
+    config: {
+      platform: 'linux',
+      image_resource: {
+        type: 'docker-image',
+        source: {
+          repository: 'openstax/cnx-easybake'
+        }
+      },
+      inputs: [
+        { name: 'book' },
+        { name: 'assembled-book' },
+        { name: 'cnx-recipes' }
+      ],
+      outputs: [{ name: 'baked-book' }],
+      run: {
+        path: '/bin/bash',
+        args: [
+          '-cxe',
+          dedent`
           exec 2> >(tee baked-book/stderr >&2)
           cp -r assembled-book/* baked-book
           book_dir="baked-book/$(cat book/name)"
@@ -34,7 +35,8 @@ const task = {
             echo "Warning: Style Not Found" >baked-book/stderr
           fi
         `
-      ]
+        ]
+      }
     }
   }
 }
