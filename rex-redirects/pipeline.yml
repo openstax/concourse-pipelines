@@ -9,7 +9,7 @@ resources:
 - name: rex-environment-json
   type: curl
   source:
-    url: https://((openstax-host))/rex/environment.json
+    url: https://staging.openstax.org/rex/environment.json
     filename: environment.json
 
 - name: cnx-deploy
@@ -65,7 +65,7 @@ jobs:
           cd cnx-deploy-updated/cnx-deploy && \
           ../../concourse-pipelines/rex-redirects/update_uri_map.sh
     params:
-      OPENSTAX_HOST: ((openstax-host))
+      OPENSTAX_HOST: staging.openstax.org
       ARCHIVE_HOST: ((archive-host))
       CNX_DEPLOY_BRANCH: ((cnx-deploy-branch))
       GIT_AUTHOR_EMAIL: ((git-author-email))
