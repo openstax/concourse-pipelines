@@ -127,5 +127,5 @@ const output = info + yaml.safeDump(config)
 if (outputFile) {
   fs.writeFileSync(outputFile, output)
 } else {
-  fs.writeFileSync('pipeline.yml', output)
+  console.log(output)
 }
