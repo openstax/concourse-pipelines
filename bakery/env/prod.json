@@ -1,5 +1,0 @@
-{
-  "ENV_NAME": "production",
-  "COPS_TARGET": "https://cops.openstax.org/api",
-  "S3_BUCKET": "ce-pdf-spike"
-}
