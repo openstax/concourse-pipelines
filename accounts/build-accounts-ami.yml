@@ -1,0 +1,42 @@
+---
+resources:
+  - name: accounts-git
+    type: git
+    source:
+      uri: git@github.com:openstax/accounts.git
+      private_key: ((github-private-key))
+      branch_filter: 'new-deployment'
+
+  - name: concourse-pipelines
+    type: git
+    source:
+      uri: https://github.com/openstax/concourse-pipelines.git
+
+jobs:
+  - name: Build Accounts AMI
+    plan:
+      - get: accounts-git
+        trigger: true
+
+      - get: concourse-pipelines
+
+      - task: Build Accounts AMI
+        config:
+          platform: linux
+          image_resource:
+            type: docker-image
+            source:
+              repository: openstax/accounts-deployment
+
+          inputs:
+            - name: accounts-git
+            - name: concourse-pipelines
+          outputs:
+            - name: accounts-ami-built
+          run:
+            path: concourse-pipelines/accounts/build-accounts-ami.sh
+
+        params:
+          GIT_PRIVATE_KEY: ((github-private-key))
+          GIT_USER_EMAIL: ((github-username))
+          GIT_USER_NAME: ((github-username))

@@ -1,0 +1,26 @@
+---
+resources:
+  - name: accounts-deployment-git
+    type: git
+    icon: github-circle
+    source:
+      uri: git@github.com:/openstax/devops
+      private_key: ((github-private-key))
+
+
+jobs:
+  - name: Build new docker image with new code
+    plan:
+      - get: accounts-deployment-git
+        trigger: true
+      - task: list-files
+        config:
+          inputs:
+            - name: accounts-deployment-git
+          platform: linux
+          image_resource:
+            type: registry-image
+            source: { repository: busybox }
+          run:
+            path: ls
+            args: ["-la", "/accounts-deployment"]
