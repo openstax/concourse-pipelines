@@ -5,7 +5,7 @@ resources:
     source:
       uri: git@github.com:openstax/accounts.git
       private_key: ((github-private-key))
-      branch: new-deployment
+      branch: new_deployment
 
   - name: concourse-pipelines
     type: git
