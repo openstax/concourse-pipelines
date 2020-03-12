@@ -2,25 +2,24 @@
 resources:
   - name: accounts-deployment-git
     type: git
-    icon: github-circle
     source:
       uri: git@github.com:/openstax/devops
+      branch: tutor-deployment-update
       private_key: ((github-private-key))
+
+  - name: accounts-deployment-docker-image
+    type: docker-image
+    source:
+      username: ((docker-hub-username))
+      password: ((docker-hub-password))
+      repository: openstaxdevops/accounts-deployment
 
 
 jobs:
-  - name: Build new docker image with new code
+  - name: publish
     plan:
       - get: accounts-deployment-git
         trigger: true
-      - task: list-files
-        config:
-          inputs:
-            - name: accounts-deployment-git
-          platform: linux
-          image_resource:
-            type: registry-image
-            source: { repository: busybox }
-          run:
-            path: ls
-            args: ["-la", "/accounts-deployment"]
+      - put: accounts-deployment-docker-image
+        params:
+          build: accounts-deployment-git/new_deployments/apps/accounts
