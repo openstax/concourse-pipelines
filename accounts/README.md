@@ -5,22 +5,22 @@ I think best practice may be to make all these into 1 single pipeline but I will
 
 No, I do not know what I am doing; feedback is always welcome, so please don't be shy to point out any concerns you see.
 
-## create-accounts-deployment-image.yml
+## create-accounts-create-deployment-image.yml
 When a merge to `accounts-deployments` happens (currently living in the devops repo), create a new docker image that has all the prereqs and updated deployment code
 
-## build-accounts-ami.yml
+## build-accounts-build-ami.yml
 Using the above docker image, build an accounts ami when a merge to `new-deployment` branch happens. 
 
-## create-accounts-sandbox.yml
+## accounts-create-sandbox.yml
 
-## test-accounts-sandbox.yml
+## accounts-test-sandbox.yml
 
-## copy-accounts-ami-to-prod.yml
+## accounts-copy-ami-to-prod.yml
 
-## create-or-update-accounts-staging.yml 
+## accounts-create-or-update-staging.yml 
 
-## test-accounts-staging.yml
+## accounts-test-staging.yml
 
-## update-accounts-prod.yml
+## accounts-update-prod.yml
 
-## test-accounts-prod.yml
+## accounts-test-prod.yml
