@@ -11,7 +11,7 @@ resources:
     type: git
     source:
       uri: https://github.com/openstax/concourse-pipelines.git
-      branch:
+      branch: accounts-new-deploy-automation
 
 jobs:
   - name: build-accounts-ami
