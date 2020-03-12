@@ -27,11 +27,13 @@ jobs:
             - name: accounts-sha
           platform: linux
           image_resource:
-            type: registry-image
-            source: { repository: alpine/git }
+            type: docker-image
+            source: 
+              repository: scb6/alpine-git
+
           run:
-            path: git
-            args: ["-C", "./accounts-git", "rev-parse", "HEAD"]
+            path: sh
+            args: ["-c", "git -C ./accounts-git rev-parse HEAD > ./accounts-sha/sha"]
 
       - task: build-accounts-ami
         config:
@@ -51,4 +53,5 @@ jobs:
             path: concourse-pipelines/accounts/accounts-build-ami.sh
 
         params:
-          SHA: accounts-sha
+          AWS_SECRET: ((aws-sandbox-secret-access-key))
+          AWS_KEY: ((aws-sandbox-secret-key-id)) 
