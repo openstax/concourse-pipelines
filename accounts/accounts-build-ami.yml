@@ -12,16 +12,28 @@ resources:
     source:
       uri: https://github.com/openstax/concourse-pipelines.git
       branch: accounts-new-deploy-automation
-
 jobs:
   - name: build-accounts-ami
     plan:
       - get: accounts-git
         trigger: true
-
       - get: concourse-pipelines
 
-      - task: Build Accounts AMI
+      - task: get-accounts-sha
+        config:
+          inputs:
+            - name: accounts-git
+          outputs: 
+            - name: accounts-sha
+          platform: linux
+          image_resource:
+            type: registry-image
+            source: { repository: alpine/git }
+          run:
+            path: git
+            args: ["-C", "./accounts-git", "rev-parse", "HEAD"]
+
+      - task: build-accounts-ami
         config:
           platform: linux
           image_resource:
@@ -34,10 +46,9 @@ jobs:
           inputs:
             - name: accounts-git
             - name: concourse-pipelines
-          outputs:
-            - name: accounts-ami-built
+            - name: accounts-sha  
           run:
             path: concourse-pipelines/accounts/accounts-build-ami.sh
 
         params:
-          SHA: accounts-git/.git/ref
+          SHA: accounts-sha
