@@ -1,11 +1,7 @@
 #!/bin/bash
 
-echo "ls -l accounts-sha"
-ls -ltr accounts-sha
-cat accounts-sha/sha
-
-SHA1 = `cat accounts-sha/sha`
-echo "SHA1: $SHA1" 
+SHA=`cat accounts-sha/sha`
+echo "SHA: $SHA"
 
 cd /accounts-deployment/scripts
-#./build_image --region us-east-2 --verbose --sha ${SHA1}
+./build_image --region us-east-2 --verbose --sha ${SHA}
