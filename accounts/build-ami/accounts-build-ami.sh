@@ -9,4 +9,6 @@ export AWS_ACCESS_KEY_ID=$AWS_KEY
 set -xe 
 
 cd /accounts-deployment/scripts
-./build_image --region us-east-2 --verbose --do_it --sha ${SHA}
+./build_image --region us-east-2 --verbose --do_it --sha ${SHA} 2>&1 | tee /tmp/build.out
+
+grep "AMI:" /tmp/build.out | awk '{print $4}' /tmp/build.out >> accounts-ami/ami
