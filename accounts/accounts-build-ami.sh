@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SHA=`cat accounts-sha/sha`
+SHA=`cat accounts-git/.git/short_ref`
 echo "SHA: $SHA"
 
 export AWS_SECRET_ACCESS_KEY=$AWS_SECRET
