@@ -1,6 +1,6 @@
 #!/bin/bash
 
-
+ls -l accounts-ami/
 AMI=`cat accounts-ami/ami`
 echo "AMI: $AMI"
 
