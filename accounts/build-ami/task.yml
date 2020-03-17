@@ -1,13 +1,6 @@
 ---
 platform: linux
 
-image_resource:
-  type: docker-image
-  source:
-    username: ((docker-hub-username))
-    password: ((docker-hub-password))
-    repository: openstaxdevops/accounts-deployment
-
 inputs:
 - name: accounts-git
 - name: concourse-pipelines
