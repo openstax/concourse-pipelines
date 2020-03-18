@@ -1,0 +1,66 @@
+---
+resources:
+  - name: accounts-deployment-git
+    type: git
+    source:
+      uri: git@github.com:/openstax/devops
+      branch: tutor-deployment-update
+      private_key: ((github-private-key))
+
+  - name: accounts-git
+    type: git
+    source:
+      uri: git@github.com:openstax/accounts.git
+      private_key: ((github-private-key))
+      branch: new_deployment
+
+  - name: concourse-pipelines
+    type: git
+    source:
+      uri: https://github.com/openstax/concourse-pipelines.git
+      branch: accounts-new-deploy-automation
+
+  - name: accounts-deployment-docker-image
+    type: docker-image
+    source:
+      username: ((docker-hub-username))
+      password: ((docker-hub-password))
+      repository: openstaxdevops/accounts-deployment
+
+  - name: qa-docker-image
+    type: docker-image
+    source:
+      username: ((docker-hub-username))
+      password: ((docker-hub-password))
+      repository: openstaxdevops/accounts-deployment
+
+jobs:
+  - name: publish-deployment-image
+    plan:
+      - get: accounts-deployment-git
+        trigger: true
+      - put: accounts-deployment-docker-image
+        params:
+          build: accounts-deployment-git/new_deployments/apps/accounts
+
+  - name: build-ami
+    plan:
+      - get: accounts-deployment-docker-image
+        passed: [publish-deployment-image]      
+      - get: accounts-git
+        trigger: true
+      - get: concourse-pipelines
+      - get: qa-docker-image
+
+      - task: build-accounts-ami
+        image: accounts-deployment-docker-image
+        file: concourse-pipelines/accounts/build-ami/task.yml
+
+      - task: create-release-candidate-environment
+        image: accounts-deployment-docker-image
+        file: concourse-pipelines/accounts/create-release-candidate-environment/task.yml
+      - task: test-release-candidate-environment
+        image: qa-docker-image
+        file: concourse-pipelines/accounts/test-release-candidate-environment/task.yml
+
+
