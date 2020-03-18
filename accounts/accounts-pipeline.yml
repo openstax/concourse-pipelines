@@ -27,13 +27,6 @@ resources:
       password: ((docker-hub-password))
       repository: openstaxdevops/accounts-deployment
 
-  - name: qa-docker-image
-    type: docker-image
-    source:
-      username: ((docker-hub-username))
-      password: ((docker-hub-password))
-      repository: openstaxdevops/accounts-deployment
-
 jobs:
   - name: publish-deployment-image
     plan:
@@ -43,24 +36,20 @@ jobs:
         params:
           build: accounts-deployment-git/new_deployments/apps/accounts
 
-  - name: build-ami
+  - name: build-deploy-test
     plan:
       - get: accounts-deployment-docker-image
         passed: [publish-deployment-image]      
       - get: accounts-git
         trigger: true
       - get: concourse-pipelines
-      - get: qa-docker-image
+      - get: accounts-ami  
 
-      - task: build-accounts-ami
+      - task: build-ami
         image: accounts-deployment-docker-image
         file: concourse-pipelines/accounts/build-ami/task.yml
 
       - task: create-release-candidate-environment
         image: accounts-deployment-docker-image
-        file: concourse-pipelines/accounts/create-release-candidate-environment/task.yml
-      - task: test-release-candidate-environment
-        image: qa-docker-image
-        file: concourse-pipelines/accounts/test-release-candidate-environment/task.yml
-
+        file: concourse-pipelines/accounts/create-release-candidate-environment/task.yml      
 
