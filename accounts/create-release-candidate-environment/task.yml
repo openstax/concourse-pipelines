@@ -4,7 +4,6 @@ platform: linux
 inputs:
 - name: accounts-git
 - name: concourse-pipelines
-- name: accounts-ami
 
 params:
   AWS_SECRET: ((aws-sandbox-secret-access-key))
