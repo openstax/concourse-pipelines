@@ -3,7 +3,7 @@
 AMI=`cat accounts-ami/ami`
 echo "AMI: $AMI"
 
-ENV_NAME=`cat accounts-git/.git/short_ref`
+ENV_NAME=p-`cat accounts-git/.git/short_ref`
 echo "ENV_NAME: $ENV_NAME"
 
 export AWS_SECRET_ACCESS_KEY=$AWS_SECRET

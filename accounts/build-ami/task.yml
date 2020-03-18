@@ -13,4 +13,4 @@ params:
   AWS_KEY: ((aws-sandbox-secret-key-id))
   
 run:
-  path: concourse-pipelines/accounts/build-ami/accounts-build-ami.sh
+  path: concourse-pipelines/accounts/build-ami/build-ami.sh
