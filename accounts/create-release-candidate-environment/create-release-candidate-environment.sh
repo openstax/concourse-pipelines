@@ -1,6 +1,6 @@
 #!/bin/bash
 
-AMI=`cat accounts-ami/ami`
+#AMI=`cat accounts-ami/ami`
 echo "AMI: $AMI"
 
 ENV_NAME=`cat accounts-git/.git/short_ref`
