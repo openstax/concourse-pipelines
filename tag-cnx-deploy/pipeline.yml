@@ -23,13 +23,14 @@ jobs:
       
       - get: concourse-pipelines
 
-      - task: tag-n-publish-cnx-deploy
+      - task: tag-n-publish
         config:
           platform: linux
           image_resource:
             type: docker-image
             source:
-              repository: python:3.8-slim
+              repository: python
+              tag: 3.8-slim
 
           inputs:
             - name: cnx-deploy
