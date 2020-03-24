@@ -2,6 +2,10 @@
 
 The repository contains various [Concourse CI](https://concourse-ci.org) pipeline definitions. Most pipeline definitions live with the code they are intended to be used with, however some pipelines do not have code. This space is used to house those pipelines that are code or service independent.
 
+## Releasing of Python Packages
+
+See the [./pypi-dist-upload/README.md](./pypi-dist-upload/README.md) file to learn more.
+
 ## Testing a local pipeline by example
 
 Let's say we would like to test a pipeline that pushes a new docker hub image whenever a new tag is pushed to a git repository. First, we should take a look at the docker-compose.yml file included in this repo.
