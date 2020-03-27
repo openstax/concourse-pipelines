@@ -35,6 +35,11 @@ resources:
   source:
     uri: https://github.com/openstax/concourse-pipelines.git
 
+- name: cnx-rex-redirects
+  type: git
+  source:
+    uri: https://github.com/openstax/cnx-rex-redirects.git
+
 jobs:
 - name: job-update-rex-redirects
   plan:
@@ -42,6 +47,7 @@ jobs:
     trigger: true
   - get: cnx-deploy
   - get: concourse-pipelines
+  - get: cnx-rex-redirects
 
   - task: update-uri-maps
     config:
@@ -54,6 +60,7 @@ jobs:
       inputs:
       - name: cnx-deploy
       - name: concourse-pipelines
+      - name: cnx-rex-redirects
       outputs:
       - name: cnx-deploy-updated
       run:
@@ -63,7 +70,7 @@ jobs:
         - |
           cp -r cnx-deploy cnx-deploy-updated && \
           cd cnx-deploy-updated/cnx-deploy && \
-          ../../concourse-pipelines/rex-redirects/update_uri_map.sh
+          ../../concourse-pipelines/rex-redirects/update_uri_map.sh ../../cnx-rex-redirects
     params:
       OPENSTAX_HOST: openstax.org
       ARCHIVE_HOST: archive.cnx.org

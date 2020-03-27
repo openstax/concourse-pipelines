@@ -5,7 +5,8 @@ set -xe
 git checkout -b "$CNX_DEPLOY_BRANCH"
 
 # TODO install pypi version (not currently available)
-pip install git+https://github.com/openstax/cnx-rex-redirects.git
+# For now we expect to be passed the source directory for cnx-rex-redirects
+pip install $1
 
 git config --global user.email "$GIT_AUTHOR_EMAIL"
 git config --global user.name "$GIT_AUTHOR_NAME"
