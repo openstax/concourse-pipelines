@@ -1,0 +1,204 @@
+---
+resources:
+  - name: source-code-nebuchadnezzar
+    type: git
+    source:
+      uri: https://github.com/openstax/nebuchadnezzar.git
+      branch: master
+  - name: docker-hub-image-nebuchadnezzar
+    type: docker-image
+    source:
+      repository: openstax/nebuchadnezzar
+      username: ((docker-hub-username))
+      password: ((docker-hub-password))
+
+  - name: source-code-output-producer-service
+    type: git
+    source:
+      uri: https://github.com/openstax/output-producer-service.git
+      branch: master
+  - name: docker-hub-image-output-producer-frontend
+    type: docker-image
+    source:
+      repository: openstax/output-producer-frontend
+      username: ((docker-hub-username))
+      password: ((docker-hub-password))
+  - name: docker-hub-image-output-producer-backend
+    type: docker-image
+    source:
+      repository: openstax/output-producer-backend
+      username: ((docker-hub-username))
+      password: ((docker-hub-password))
+  - name: docker-hub-image-cops-bakery-scripts
+    type: docker-image
+    source:
+      repository: openstax/cops-bakery-scripts
+      username: ((docker-hub-username))
+      password: ((docker-hub-password))
+
+  - name: source-code-cnx-easybake
+    type: git
+    source:
+      uri: https://github.com/openstax/cnx-easybake.git
+      branch: master
+  - name: docker-hub-image-cnx-easybake
+    type: docker-image
+    source:
+      repository: openstax/cnx-easybake
+      username: ((docker-hub-username))
+      password: ((docker-hub-password))
+
+  - name: source-code-mathify
+    type: git
+    source:
+      uri: https://github.com/openstax/mathify.git
+      branch: master
+  - name: docker-hub-image-mathify
+    type: docker-image
+    source:
+      repository: openstax/mathify
+      username: ((docker-hub-username))
+      password: ((docker-hub-password))
+
+  - name: source-code-princexml
+    type: git
+    source:
+      uri: https://github.com/openstax/docker-princexml.git
+      branch: master
+  - name: docker-hub-image-princexml
+    type: docker-image
+    source:
+      repository: openstax/princexml
+      username: ((docker-hub-username))
+      password: ((docker-hub-password))
+
+  - name: source-code-output-producer-resource
+    type: git
+    source:
+      uri: https://github.com/openstax/output-producer-resource.git
+      branch: master
+  - name: docker-hub-image-output-producer-resource
+    type: docker-image
+    source:
+      repository: openstax/output-producer-resource
+      username: ((docker-hub-username))
+      password: ((docker-hub-password))
+
+  - name: source-code-cnx-recipes
+    type: git
+    source:
+      uri: https://github.com/openstax/cnx-recipes.git
+      branch: master
+      tag_filter: '*'
+  - name: docker-hub-image-cnx-recipes-output
+    type: docker-image
+    source:
+      repository: openstax/cnx-recipes-output
+      username: ((docker-hub-username))
+      password: ((docker-hub-password))
+
+jobs:
+  - name: build-and-publish-images
+    public: true
+    plan:
+      - get: source-code-nebuchadnezzar
+        trigger: true
+      - get: source-code-output-producer-service
+        trigger: true
+      - get: source-code-cnx-easybake
+        trigger: true
+      - get: source-code-mathify
+        trigger: true
+      - get: source-code-princexml
+        trigger: true
+      - get: source-code-output-producer-resource
+        trigger: true
+      - get: source-code-cnx-recipes
+        trigger: true
+      - task: report-versions-and-create-tag
+        config:
+          platform: linux
+          image_resource:
+            type: docker-image
+            source: {repository: alpine/git}
+          inputs:
+            - { name: source-code-nebuchadnezzar }
+            - { name: source-code-output-producer-service }
+            - { name: source-code-cnx-easybake }
+            - { name: source-code-mathify }
+            - { name: source-code-princexml }
+            - { name: source-code-output-producer-resource }
+            - { name: source-code-cnx-recipes }
+          outputs: [{name: 'tag'}]
+          run:
+            path: /bin/sh
+            args:
+              - -cxe
+              - |
+                echo "nebuchadnezzar => $(git --git-dir=source-code-nebuchadnezzar/.git rev-parse --short HEAD)"
+                echo "output-producer-service => $(git --git-dir=source-code-output-producer-service/.git rev-parse --short HEAD)"
+                echo "cnx-easybake => $(git --git-dir=source-code-cnx-easybake/.git rev-parse --short HEAD)"
+                echo "mathify => $(git --git-dir=source-code-mathify/.git rev-parse --short HEAD)"
+                echo "princexml => $(git --git-dir=source-code-princexml/.git rev-parse --short HEAD)"
+                echo "output-producer-resource => $(git --git-dir=source-code-output-producer-resource/.git rev-parse --short HEAD)"
+                echo "cnx-recipes => $(git --git-dir=source-code-cnx-recipes/.git describe)"
+
+                tag=$(date '+%Y%m%d.%H%M%S')
+                echo "$tag" > tag/tag
+      - aggregate:
+        - put: docker-hub-image-nebuchadnezzar
+          params:
+            build: source-code-nebuchadnezzar
+            tag_file: tag/tag
+            tag_as_latest: false
+            get_params: {skip_download: true}
+        - put: docker-hub-image-output-producer-frontend
+          params:
+            build: source-code-output-producer-service/frontend
+            tag_file: tag/tag
+            tag_as_latest: false
+            get_params: {skip_download: true}
+        - put: docker-hub-image-output-producer-backend
+          params:
+            build: source-code-output-producer-service/backend
+            dockerfile: source-code-output-producer-service/backend/backend.dockerfile
+            tag_file: tag/tag
+            tag_as_latest: false
+            get_params: {skip_download: true}
+        - put: docker-hub-image-cops-bakery-scripts
+          params:
+            build: source-code-output-producer-service/bakery/src/scripts
+            tag_file: tag/tag
+            tag_as_latest: false
+            get_params: {skip_download: true}
+        - put: docker-hub-image-cnx-easybake
+          params:
+            build: source-code-cnx-easybake
+            tag_file: tag/tag
+            tag_as_latest: false
+            get_params: {skip_download: true}
+        - put: docker-hub-image-mathify
+          params:
+            build: source-code-mathify
+            tag_file: tag/tag
+            tag_as_latest: false
+            get_params: {skip_download: true}
+        - put: docker-hub-image-princexml
+          params:
+            build: source-code-princexml
+            tag_file: tag/tag
+            tag_as_latest: false
+            get_params: {skip_download: true}
+        - put: docker-hub-image-output-producer-resource
+          params:
+            build: source-code-output-producer-resource
+            tag_file: tag/tag
+            tag_as_latest: false
+            get_params: {skip_download: true}
+        - put: docker-hub-image-cnx-recipes-output
+          params:
+            build: source-code-cnx-recipes
+            dockerfile: source-code-cnx-recipes/outputs.dockerfile
+            tag_file: tag/tag
+            tag_as_latest: false
+            get_params: {skip_download: true}
