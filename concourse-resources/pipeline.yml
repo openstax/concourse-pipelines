@@ -1,35 +1,22 @@
 ---
-resource-types:
-  - name: slack
-    type: docker-image
-    source:
-      repository: karenc/concourse-slack-resource
-
 resources:
   - name: source-code
     type: git
     source:
-      uri: https://github.com/openstax/output-producer-resource.git
+      uri: https://github.com/openstax/((github-repo)).git
 
   - name: source-code-tagged
     type: git
     source:
-      uri: https://github.com/openstax/output-producer-resource.git
+      uri: https://github.com/openstax/((github-repo)).git
       tag_filter: '*'
 
   - name: docker-hub-image
     type: docker-image
     source:
-      repository: openstax/output-producer-resource
+      repository: openstax/((github-repo))
       username: ((docker-hub-username))
       password: ((docker-hub-password))
-
-  - name: notify
-    type: slack
-    source:
-      user_access_token: ((slack-user-token))
-      bot_access_token: ((slack-bot-token))
-      bot_user_id: ((slack-bot-user-id))
 
 jobs:
   - name: build-and-publish-image
@@ -55,14 +42,7 @@ jobs:
           build: source-code
           tag_file: tag-file/tag
           tag_as_latest: false
-    on_success:
-      put: notify
-      params:
-        text: ":white_check_mark: `dev` output-producer-resource docker image successfully uploaded to dockerhub."
-    on_failure:
-      put: notify
-      params:
-        text: ":warning: There was a problem building/uploading `dev` output-producer-resource docker image to dockerhub."
+          get_params: {skip_download: true}
 
   - name: build-and-publish-tagged-image
     public: true
@@ -83,21 +63,22 @@ jobs:
               - -cxe
               - |
                 touch tag-files/additional tag-files/current
+                this_tag=$(git --git-dir source-code-tagged/.git describe --tags --abbrev=0)
+
+                git --git-dir source-code-tagged/.git checkout master
                 latest_tag=$(git --git-dir source-code-tagged/.git describe --tags --abbrev=0)
-                this_tag=$(git --git-dir source-code-tagged/.git for-each-ref refs/tags --sort=-taggerdate --format='%(refname:short)' --count=1)
+                git --git-dir source-code-tagged/.git checkout "$this_tag"
+
                 echo "$this_tag" > tag-files/current
-                [[ "$this_tag" = "$latest_tag" ]] && echo 'latest' > tag-files/additional
+                if [ "$this_tag" = "$latest_tag" ]; then
+                  echo 'latest' > tag-files/additional
+                else
+                  echo 'not latest'
+                fi
       - put: docker-hub-image
         params:
           additional_tags: tag-files/additional
           build: source-code-tagged
           tag_file: tag-files/current
           tag_as_latest: false
-    on_success:
-      put: notify
-      params:
-        text: ":white_check_mark: `tagged` output-producer-resource docker image successfully uploaded to dockerhub."
-    on_failure:
-      put: notify
-      params:
-        text: ":warning: There was a problem building/uploading `tagged` output-producer-resource docker image to dockerhub."
+          get_params: {skip_download: true}
