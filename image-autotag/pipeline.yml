@@ -129,33 +129,60 @@ jobs:
             - { name: source-code-princexml }
             - { name: source-code-output-producer-resource }
             - { name: source-code-cnx-recipes }
-          outputs: [{name: 'tag'}]
+          outputs: [{name: 'tag'}, {name: 'versions'}]
           run:
             path: /bin/sh
             args:
               - -cxe
               - |
-                echo "nebuchadnezzar => $(git --git-dir=source-code-nebuchadnezzar/.git rev-parse --short HEAD)"
-                echo "output-producer-service => $(git --git-dir=source-code-output-producer-service/.git rev-parse --short HEAD)"
-                echo "cnx-easybake => $(git --git-dir=source-code-cnx-easybake/.git rev-parse --short HEAD)"
-                echo "mathify => $(git --git-dir=source-code-mathify/.git rev-parse --short HEAD)"
-                echo "princexml => $(git --git-dir=source-code-princexml/.git rev-parse --short HEAD)"
-                echo "output-producer-resource => $(git --git-dir=source-code-output-producer-resource/.git rev-parse --short HEAD)"
-                echo "cnx-recipes => $(git --git-dir=source-code-cnx-recipes/.git describe)"
+                git --git-dir=source-code-nebuchadnezzar/.git rev-parse --short HEAD > versions/nebuchadnezzar
+                git --git-dir=source-code-output-producer-service/.git rev-parse --short HEAD > versions/output-producer-service
+                git --git-dir=source-code-cnx-easybake/.git rev-parse --short HEAD > versions/cnx-easybake
+                git --git-dir=source-code-mathify/.git rev-parse --short HEAD > versions/mathify
+                git --git-dir=source-code-princexml/.git rev-parse --short HEAD > versions/princexml
+                git --git-dir=source-code-output-producer-resource/.git rev-parse --short HEAD > versions/output-producer-resource
+                git --git-dir=source-code-cnx-recipes/.git describe > versions/cnx-recipes
 
                 tag=$(date '+%Y%m%d.%H%M%S')
                 echo "$tag" > tag/tag
+      - task: create-versions-metadata
+        config:
+          platform: linux
+          image_resource:
+            type: docker-image
+            source: {repository: stedolan/jq}
+          inputs: [{name: 'versions'}]
+          outputs: [{name: 'labels'}]
+          run:
+            path: /bin/sh
+            args:
+              - -cxe
+              - |
+                jq -n \
+                --arg version_neb $(cat versions/nebuchadnezzar) \
+                --arg version_cops $(cat versions/output-producer-service) \
+                --arg version_easybake $(cat versions/cnx-easybake) \
+                --arg version_mathify $(cat versions/mathify) \
+                --arg version_princexml $(cat versions/princexml) \
+                --arg version_cops_resource $(cat versions/output-producer-resource) \
+                --arg version_recipes $(cat versions/cnx-recipes) \
+                '{ $version_neb, $version_cops, $version_easybake, $version_mathify, $version_princexml, $version_cops_resource, $version_recipes }' \
+                > labels/labels
+                
+                cat labels/labels
       - aggregate:
         - put: docker-hub-image-nebuchadnezzar
           params:
             build: source-code-nebuchadnezzar
             tag_file: tag/tag
+            labels_file: labels/labels
             tag_as_latest: false
             get_params: {skip_download: true}
         - put: docker-hub-image-output-producer-frontend
           params:
             build: source-code-output-producer-service/frontend
             tag_file: tag/tag
+            labels_file: labels/labels
             tag_as_latest: false
             get_params: {skip_download: true}
         - put: docker-hub-image-output-producer-backend
@@ -163,36 +190,42 @@ jobs:
             build: source-code-output-producer-service/backend
             dockerfile: source-code-output-producer-service/backend/backend.dockerfile
             tag_file: tag/tag
+            labels_file: labels/labels
             tag_as_latest: false
             get_params: {skip_download: true}
         - put: docker-hub-image-cops-bakery-scripts
           params:
             build: source-code-output-producer-service/bakery/src/scripts
             tag_file: tag/tag
+            labels_file: labels/labels
             tag_as_latest: false
             get_params: {skip_download: true}
         - put: docker-hub-image-cnx-easybake
           params:
             build: source-code-cnx-easybake
             tag_file: tag/tag
+            labels_file: labels/labels
             tag_as_latest: false
             get_params: {skip_download: true}
         - put: docker-hub-image-mathify
           params:
             build: source-code-mathify
             tag_file: tag/tag
+            labels_file: labels/labels
             tag_as_latest: false
             get_params: {skip_download: true}
         - put: docker-hub-image-princexml
           params:
             build: source-code-princexml
             tag_file: tag/tag
+            labels_file: labels/labels
             tag_as_latest: false
             get_params: {skip_download: true}
         - put: docker-hub-image-output-producer-resource
           params:
             build: source-code-output-producer-resource
             tag_file: tag/tag
+            labels_file: labels/labels
             tag_as_latest: false
             get_params: {skip_download: true}
         - put: docker-hub-image-cnx-recipes-output
@@ -200,5 +233,6 @@ jobs:
             build: source-code-cnx-recipes
             dockerfile: source-code-cnx-recipes/outputs.dockerfile
             tag_file: tag/tag
+            labels_file: labels/labels
             tag_as_latest: false
             get_params: {skip_download: true}
