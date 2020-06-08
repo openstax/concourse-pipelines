@@ -1,4 +1,10 @@
 ---
+tags-labels: &tags-labels
+  tag_file: tag/tag
+  additional_tags: tag/master
+  labels_file: labels/labels
+  tag_as_latest: false
+
 resources:
   - name: source-code-nebuchadnezzar
     type: git
@@ -175,74 +181,47 @@ jobs:
         - put: docker-hub-image-nebuchadnezzar
           params:
             build: source-code-nebuchadnezzar
-            tag_file: tag/tag
-            additional_tags: tag/master
-            labels_file: labels/labels
-            tag_as_latest: false
+            <<: *tags-labels
           get_params: {skip_download: true}
         - put: docker-hub-image-output-producer-frontend
           params:
             build: source-code-output-producer-service/frontend
-            tag_file: tag/tag
-            additional_tags: tag/master
-            labels_file: labels/labels
-            tag_as_latest: false
+            <<: *tags-labels
           get_params: {skip_download: true}
         - put: docker-hub-image-output-producer-backend
           params:
             build: source-code-output-producer-service/backend
             dockerfile: source-code-output-producer-service/backend/backend.dockerfile
-            tag_file: tag/tag
-            additional_tags: tag/master
-            labels_file: labels/labels
-            tag_as_latest: false
+            <<: *tags-labels
           get_params: {skip_download: true}
         - put: docker-hub-image-cops-bakery-scripts
           params:
             build: source-code-output-producer-service/bakery/src/scripts
-            tag_file: tag/tag
-            additional_tags: tag/master
-            labels_file: labels/labels
-            tag_as_latest: false
+            <<: *tags-labels
           get_params: {skip_download: true}
         - put: docker-hub-image-cnx-easybake
           params:
             build: source-code-cnx-easybake
-            tag_file: tag/tag
-            additional_tags: tag/master
-            labels_file: labels/labels
-            tag_as_latest: false
+            <<: *tags-labels
           get_params: {skip_download: true}
         - put: docker-hub-image-mathify
           params:
             build: source-code-mathify
-            tag_file: tag/tag
-            additional_tags: tag/master
-            labels_file: labels/labels
-            tag_as_latest: false
+            <<: *tags-labels
           get_params: {skip_download: true}
         - put: docker-hub-image-princexml
           params:
             build: source-code-princexml
-            tag_file: tag/tag
-            additional_tags: tag/master
-            labels_file: labels/labels
-            tag_as_latest: false
+            <<: *tags-labels
           get_params: {skip_download: true}
         - put: docker-hub-image-output-producer-resource
           params:
             build: source-code-output-producer-resource
-            tag_file: tag/tag
-            additional_tags: tag/master
-            labels_file: labels/labels
-            tag_as_latest: false
+            <<: *tags-labels
           get_params: {skip_download: true}
         - put: docker-hub-image-cnx-recipes-output
           params:
             build: source-code-cnx-recipes
             dockerfile: source-code-cnx-recipes/outputs.dockerfile
-            tag_file: tag/tag
-            additional_tags: tag/master
-            labels_file: labels/labels
-            tag_as_latest: false
+            <<: *tags-labels
           get_params: {skip_download: true}
