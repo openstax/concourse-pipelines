@@ -145,6 +145,7 @@ jobs:
 
                 tag=$(date '+%Y%m%d.%H%M%S')
                 echo "$tag" > tag/tag
+                echo master > tag/master
       - task: create-versions-metadata
         config:
           platform: linux
@@ -175,6 +176,7 @@ jobs:
           params:
             build: source-code-nebuchadnezzar
             tag_file: tag/tag
+            additional_tags: tag/master
             labels_file: labels/labels
             tag_as_latest: false
           get_params: {skip_download: true}
@@ -182,6 +184,7 @@ jobs:
           params:
             build: source-code-output-producer-service/frontend
             tag_file: tag/tag
+            additional_tags: tag/master
             labels_file: labels/labels
             tag_as_latest: false
           get_params: {skip_download: true}
@@ -190,6 +193,7 @@ jobs:
             build: source-code-output-producer-service/backend
             dockerfile: source-code-output-producer-service/backend/backend.dockerfile
             tag_file: tag/tag
+            additional_tags: tag/master
             labels_file: labels/labels
             tag_as_latest: false
           get_params: {skip_download: true}
@@ -197,6 +201,7 @@ jobs:
           params:
             build: source-code-output-producer-service/bakery/src/scripts
             tag_file: tag/tag
+            additional_tags: tag/master
             labels_file: labels/labels
             tag_as_latest: false
           get_params: {skip_download: true}
@@ -204,6 +209,7 @@ jobs:
           params:
             build: source-code-cnx-easybake
             tag_file: tag/tag
+            additional_tags: tag/master
             labels_file: labels/labels
             tag_as_latest: false
           get_params: {skip_download: true}
@@ -211,6 +217,7 @@ jobs:
           params:
             build: source-code-mathify
             tag_file: tag/tag
+            additional_tags: tag/master
             labels_file: labels/labels
             tag_as_latest: false
           get_params: {skip_download: true}
@@ -218,6 +225,7 @@ jobs:
           params:
             build: source-code-princexml
             tag_file: tag/tag
+            additional_tags: tag/master
             labels_file: labels/labels
             tag_as_latest: false
           get_params: {skip_download: true}
@@ -225,6 +233,7 @@ jobs:
           params:
             build: source-code-output-producer-resource
             tag_file: tag/tag
+            additional_tags: tag/master
             labels_file: labels/labels
             tag_as_latest: false
           get_params: {skip_download: true}
@@ -233,6 +242,7 @@ jobs:
             build: source-code-cnx-recipes
             dockerfile: source-code-cnx-recipes/outputs.dockerfile
             tag_file: tag/tag
+            additional_tags: tag/master
             labels_file: labels/labels
             tag_as_latest: false
           get_params: {skip_download: true}
