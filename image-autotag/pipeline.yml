@@ -103,6 +103,18 @@ resources:
       username: ((docker-hub-username))
       password: ((docker-hub-password))
 
+  - name: source-code-xhtml-validator
+    type: git
+    source:
+      uri: https://github.com/openstax/xhtml-validator.git
+      branch: trunk
+  - name: docker-hub-image-xhtml-validator
+    type: docker-image
+    source:
+      repository: openstax/xhtml-validator
+      username: ((docker-hub-username))
+      password: ((docker-hub-password))
+
 jobs:
   - name: build-and-publish-images
     public: true
@@ -121,6 +133,8 @@ jobs:
         trigger: true
       - get: source-code-cnx-recipes
         trigger: true
+      - get: source-code-xhtml-validator
+        trigger: true
       - task: report-versions-and-create-tag
         config:
           platform: linux
@@ -135,6 +149,7 @@ jobs:
             - { name: source-code-princexml }
             - { name: source-code-output-producer-resource }
             - { name: source-code-cnx-recipes }
+            - { name: source-code-xhtml-validator }
           outputs: [{name: 'tag'}, {name: 'versions'}]
           run:
             path: /bin/sh
@@ -148,6 +163,7 @@ jobs:
                 git --git-dir=source-code-princexml/.git rev-parse --short HEAD > versions/princexml
                 git --git-dir=source-code-output-producer-resource/.git rev-parse --short HEAD > versions/output-producer-resource
                 git --git-dir=source-code-cnx-recipes/.git describe > versions/cnx-recipes
+                git --git-dir=source-code-xhtml-validator/.git rev-parse --short HEAD > versions/xhtml-validator
 
                 tag=$(date '+%Y%m%d.%H%M%S')
                 echo "$tag" > tag/tag
@@ -173,9 +189,10 @@ jobs:
                 --arg version_princexml $(cat versions/princexml) \
                 --arg version_cops_resource $(cat versions/output-producer-resource) \
                 --arg version_recipes $(cat versions/cnx-recipes) \
-                '{ $version_neb, $version_cops, $version_easybake, $version_mathify, $version_princexml, $version_cops_resource, $version_recipes }' \
+                --arg version_xhtml_validator $(cat versions/xhtml-validator) \
+                '{ $version_neb, $version_cops, $version_easybake, $version_mathify, $version_princexml, $version_cops_resource, $version_recipes, $version_xhtml_validator }' \
                 > labels/labels
-                
+
                 cat labels/labels
       - aggregate:
         - put: docker-hub-image-nebuchadnezzar
@@ -223,5 +240,10 @@ jobs:
           params:
             build: source-code-cnx-recipes
             dockerfile: source-code-cnx-recipes/outputs.dockerfile
+            <<: *tags-labels
+          get_params: {skip_download: true}
+        - put: docker-hub-image-xhtml-validator
+          params:
+            build: source-code-xhtml-validator
             <<: *tags-labels
           get_params: {skip_download: true}
