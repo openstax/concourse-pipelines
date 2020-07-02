@@ -1,11 +1,26 @@
 ---
 tags-labels: &tags-labels
   tag_file: tag/tag
-  additional_tags: tag/master
+  additional_tags: tag/other
   labels_file: labels/labels
   tag_as_latest: false
 
+use-trunk-cache: &use-trunk-cache
+  cache: true
+  cache_tag: trunk
+
+docker-credentials: &docker-credentials
+  username: ((docker-hub-username))
+  password: ((docker-hub-password))
+
 resources:
+  # We leverage concourse's volume caching to provide the shared python:3.7-slim shared base
+  - name: python-3.7-slim
+    type: docker-image
+    source:
+      repository: python
+      tag: 3.7-slim
+
   - name: source-code-nebuchadnezzar
     type: git
     source:
@@ -15,8 +30,7 @@ resources:
     type: docker-image
     source:
       repository: openstax/nebuchadnezzar
-      username: ((docker-hub-username))
-      password: ((docker-hub-password))
+      <<: *docker-credentials
 
   - name: source-code-output-producer-service
     type: git
@@ -27,20 +41,17 @@ resources:
     type: docker-image
     source:
       repository: openstax/output-producer-frontend
-      username: ((docker-hub-username))
-      password: ((docker-hub-password))
+      <<: *docker-credentials
   - name: docker-hub-image-output-producer-backend
     type: docker-image
     source:
       repository: openstax/output-producer-backend
-      username: ((docker-hub-username))
-      password: ((docker-hub-password))
+      <<: *docker-credentials
   - name: docker-hub-image-cops-bakery-scripts
     type: docker-image
     source:
       repository: openstax/cops-bakery-scripts
-      username: ((docker-hub-username))
-      password: ((docker-hub-password))
+      <<: *docker-credentials
 
   - name: source-code-cnx-easybake
     type: git
@@ -51,8 +62,7 @@ resources:
     type: docker-image
     source:
       repository: openstax/cnx-easybake
-      username: ((docker-hub-username))
-      password: ((docker-hub-password))
+      <<: *docker-credentials
 
   - name: source-code-mathify
     type: git
@@ -63,8 +73,7 @@ resources:
     type: docker-image
     source:
       repository: openstax/mathify
-      username: ((docker-hub-username))
-      password: ((docker-hub-password))
+      <<: *docker-credentials
 
   - name: source-code-princexml
     type: git
@@ -75,8 +84,7 @@ resources:
     type: docker-image
     source:
       repository: openstax/princexml
-      username: ((docker-hub-username))
-      password: ((docker-hub-password))
+      <<: *docker-credentials
 
   - name: source-code-output-producer-resource
     type: git
@@ -87,8 +95,7 @@ resources:
     type: docker-image
     source:
       repository: openstax/output-producer-resource
-      username: ((docker-hub-username))
-      password: ((docker-hub-password))
+      <<: *docker-credentials
 
   - name: source-code-cnx-recipes
     type: git
@@ -100,8 +107,7 @@ resources:
     type: docker-image
     source:
       repository: openstax/cnx-recipes-output
-      username: ((docker-hub-username))
-      password: ((docker-hub-password))
+      <<: *docker-credentials
 
   - name: source-code-xhtml-validator
     type: git
@@ -112,29 +118,32 @@ resources:
     type: docker-image
     source:
       repository: openstax/xhtml-validator
-      username: ((docker-hub-username))
-      password: ((docker-hub-password))
+      <<: *docker-credentials
 
 jobs:
   - name: build-and-publish-images
     public: true
+    serial: true
     plan:
-      - get: source-code-nebuchadnezzar
-        trigger: true
-      - get: source-code-output-producer-service
-        trigger: true
-      - get: source-code-cnx-easybake
-        trigger: true
-      - get: source-code-mathify
-        trigger: true
-      - get: source-code-princexml
-        trigger: true
-      - get: source-code-output-producer-resource
-        trigger: true
-      - get: source-code-cnx-recipes
-        trigger: true
-      - get: source-code-xhtml-validator
-        trigger: true
+      - in_parallel:
+        - get: source-code-nebuchadnezzar
+          trigger: true
+        - get: source-code-output-producer-service
+          trigger: true
+        - get: source-code-cnx-easybake
+          trigger: true
+        - get: source-code-mathify
+          trigger: true
+        - get: source-code-princexml
+          trigger: true
+        - get: source-code-output-producer-resource
+          trigger: true
+        - get: source-code-cnx-recipes
+          trigger: true
+        - get: source-code-xhtml-validator
+          trigger: true
+        - get: python-3.7-slim
+          params: {save: true}
       - task: report-versions-and-create-tag
         config:
           platform: linux
@@ -167,7 +176,8 @@ jobs:
 
                 tag=$(date '+%Y%m%d.%H%M%S')
                 echo "$tag" > tag/tag
-                echo master > tag/master
+                echo master > tag/other
+                echo trunk >> tag/other
       - task: create-versions-metadata
         config:
           platform: linux
@@ -194,56 +204,70 @@ jobs:
                 > labels/labels
 
                 cat labels/labels
-      - aggregate:
-        - put: docker-hub-image-nebuchadnezzar
-          params:
-            build: source-code-nebuchadnezzar
-            <<: *tags-labels
-          get_params: {skip_download: true}
-        - put: docker-hub-image-output-producer-frontend
-          params:
-            build: source-code-output-producer-service/frontend
-            <<: *tags-labels
-          get_params: {skip_download: true}
-        - put: docker-hub-image-output-producer-backend
-          params:
-            build: source-code-output-producer-service/backend
-            dockerfile: source-code-output-producer-service/backend/backend.dockerfile
-            <<: *tags-labels
-          get_params: {skip_download: true}
-        - put: docker-hub-image-cops-bakery-scripts
-          params:
-            build: source-code-output-producer-service/bakery/src/scripts
-            <<: *tags-labels
-          get_params: {skip_download: true}
-        - put: docker-hub-image-cnx-easybake
-          params:
-            build: source-code-cnx-easybake
-            <<: *tags-labels
-          get_params: {skip_download: true}
-        - put: docker-hub-image-mathify
-          params:
-            build: source-code-mathify
-            <<: *tags-labels
-          get_params: {skip_download: true}
-        - put: docker-hub-image-princexml
-          params:
-            build: source-code-princexml
-            <<: *tags-labels
-          get_params: {skip_download: true}
-        - put: docker-hub-image-output-producer-resource
-          params:
-            build: source-code-output-producer-resource
-            <<: *tags-labels
-          get_params: {skip_download: true}
-        - put: docker-hub-image-cnx-recipes-output
-          params:
-            build: source-code-cnx-recipes
-            dockerfile: source-code-cnx-recipes/outputs.dockerfile
-            <<: *tags-labels
-          get_params: {skip_download: true}
-        - put: docker-hub-image-xhtml-validator
-          params:
-            build: source-code-xhtml-validator
-            <<: *tags-labels
-          get_params: {skip_download: true}
+      - in_parallel:
+          fail_fast: true
+          limit: 4
+          steps:
+            - put: docker-hub-image-nebuchadnezzar
+              params:
+                build: source-code-nebuchadnezzar
+                load_base: python-3.7-slim
+                <<: *tags-labels
+                <<: *use-trunk-cache
+              get_params: {skip_download: true}
+            - put: docker-hub-image-output-producer-frontend
+              params:
+                build: source-code-output-producer-service/frontend
+                <<: *tags-labels
+                <<: *use-trunk-cache
+              get_params: {skip_download: true}
+            - put: docker-hub-image-output-producer-backend
+              params:
+                build: source-code-output-producer-service/backend
+                dockerfile: source-code-output-producer-service/backend/backend.dockerfile
+                <<: *tags-labels
+                <<: *use-trunk-cache
+              get_params: {skip_download: true}
+            - put: docker-hub-image-cops-bakery-scripts
+              params:
+                build: source-code-output-producer-service/bakery/src/scripts
+                load_base: python-3.7-slim
+                <<: *tags-labels
+                <<: *use-trunk-cache
+              get_params: {skip_download: true}
+            - put: docker-hub-image-cnx-easybake
+              params:
+                build: source-code-cnx-easybake
+                load_base: python-3.7-slim
+                <<: *tags-labels
+                <<: *use-trunk-cache
+              get_params: {skip_download: true}
+            - put: docker-hub-image-mathify
+              params:
+                build: source-code-mathify
+                <<: *tags-labels
+                <<: *use-trunk-cache
+              get_params: {skip_download: true}
+            - put: docker-hub-image-princexml
+              params:
+                build: source-code-princexml
+                <<: *tags-labels
+                <<: *use-trunk-cache
+              get_params: {skip_download: true}
+            - put: docker-hub-image-output-producer-resource
+              params:
+                build: source-code-output-producer-resource
+                <<: *tags-labels
+                <<: *use-trunk-cache
+              get_params: {skip_download: true}
+            - put: docker-hub-image-cnx-recipes-output
+              params:
+                build: source-code-cnx-recipes
+                dockerfile: source-code-cnx-recipes/outputs.dockerfile
+                <<: *tags-labels
+              get_params: {skip_download: true}
+            - put: docker-hub-image-xhtml-validator
+              params:
+                build: source-code-xhtml-validator
+                <<: *tags-labels
+              get_params: {skip_download: true}
