@@ -22,18 +22,42 @@ jobs:
               repository: python
               tag: ((python-image-tag))
 
-          inputs:
-            - name: github-repo
+          inputs: [{name: github-repo}]
+          outputs: [{name: release-link}]
 
           run:
             path: /bin/bash
             args:
-              - -c
+              - -cxe
               - |
-                cd github-repo && \
-                pip install -q twine && \
-                python setup.py ((setup-options)) && \
-                twine upload dist/*
+                set -eo pipefail
+                cd github-repo
+                pip install -q twine
+                python setup.py ((setup-options))
+                release_link=$(twine upload dist/* | tail -n 1)
+                cd -
+                [[ "$release_link" == *http* ]] || (echo 'Release link not a link' && exit 2)
+                echo $release_link > release-link/release-link
           params:
             TWINE_USERNAME: ((pypi-username))
             TWINE_PASSWORD: ((pypi-password))
+    on_success:
+      task: notify slack
+      config:
+        platform: linux
+        image_resource:
+          type: docker-image
+          source:
+            repository: curlimages/curl
+        inputs: [{name: release-link}]
+        params:
+          GITHUB_REPO: ((github-repo))
+          WEBHOOK_URL: ((slack-webhook-cestream))
+        run:
+          path: /bin/sh
+          args:
+            - -cxe
+            - |
+              release_link=$(cat release-link/release-link)
+              message="Released ${GITHUB_REPO} on PyPi: ${release_link}"
+              curl -X POST -H 'Content-type: application/json' --data "{\"text\":\"${message}\"}" ${WEBHOOK_URL}
