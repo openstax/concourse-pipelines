@@ -87,4 +87,14 @@ git push origin $new_version
 
 # Upload RhaptosPrint to dist server
 cd ../.. # Products.RhaptosPrint/
-python2.4 setup.py mregister sdist bdist_egg mupload -r dist-rhaptos
+
+# Unfortunately, per https://bugs.python.org/issue21722 there's a bug in old
+# versions of Python where failed uploads don't return a non-zero error code.
+# As a work around to catch these errors, we'll pipe output to file and look
+# for expected values that denote successful upload of .tar.gz and .egg files
+# at the end.
+python2.4 setup.py mregister sdist bdist_egg mupload -r dist-rhaptos 2>&1 | tee upload_output.txt
+num_success=$(tail -n 5 upload_output.txt | grep "Server response (200): OK" | wc -l)
+if [ $num_success -ne 2 ]; then
+  exit 1
+fi
