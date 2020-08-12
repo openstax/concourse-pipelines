@@ -93,13 +93,13 @@ cd ../.. # Products.RhaptosPrint/
 # As a work around to catch these errors, we'll pipe output to file and look
 # for expected values that denote successful upload of .tar.gz and .egg files
 # at the end.
-python2.4 setup.py mregister sdist mupload -r dist-rhaptos 2>&1 | tee upload_output.txt
+python2.4 setup.py mregister bdist_egg mupload -r dist-rhaptos 2>&1 | tee upload_output.txt
 num_success=$(tail -n 5 upload_output.txt | grep "Server response (200): OK" | wc -l)
 if [ $num_success -ne 1 ]; then
   exit 1
 fi
 
-python2.4 setup.py bdist_egg mupload -r dist-rhaptos 2>&1 | tee upload_output.txt
+python2.4 setup.py sdist mupload -r dist-rhaptos 2>&1 | tee upload_output.txt
 num_success=$(tail -n 5 upload_output.txt | grep "Server response (200): OK" | wc -l)
 if [ $num_success -ne 1 ]; then
   exit 1
