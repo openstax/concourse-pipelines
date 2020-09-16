@@ -6,12 +6,12 @@ set -e
 cat >$HOME/.pypirc <<EOF
 [distutils]
 index-servers =
-  dist-rhaptos
+  dist-cnx
 
-[dist-rhaptos]
-repository = $DIST_RHAPTOS_URL
-username = $DIST_RHAPTOS_USERNAME
-password = $DIST_RHAPTOS_PASSWORD
+[dist-cnx]
+repository = $DIST_CNX_URL
+username = $DIST_CNX_USERNAME
+password = $DIST_CNX_PASSWORD
 EOF
 
 # create ssh private keys
@@ -93,7 +93,7 @@ cd ../.. # Products.RhaptosPrint/
 # As a work around to catch these errors, we'll pipe output to file and look
 # for expected values that denote successful upload of .tar.gz and .egg files
 # at the end.
-python2.4 setup.py mregister sdist bdist_egg mupload -r dist-rhaptos 2>&1 | tee upload_output.txt
+python2.4 setup.py mregister sdist bdist_egg mupload -r dist-cnx 2>&1 | tee upload_output.txt
 num_success=$(tail -n 5 upload_output.txt | grep "Server response (200): OK" | wc -l)
 if [ $num_success -ne 2 ]; then
   exit 1
