@@ -38,9 +38,9 @@ jobs:
             path: concourse-pipelines/release-oer-exports/release-oer-exports.sh
 
         params:
-          DIST_RHAPTOS_USERNAME: ((dist-rhaptos-username))
-          DIST_RHAPTOS_PASSWORD: ((dist-rhaptos-password))
-          DIST_RHAPTOS_URL: http://dist.rhaptos.org
+          DIST_CNX_USERNAME: ((dist-cnx-username))
+          DIST_CNX_PASSWORD: ((dist-cnx-password))
+          DIST_CNX_URL: https://dist.cnx.org
           RHAPTOS_PRINT_REPO_URL: git@github.com:Rhaptos/Products.RhaptosPrint.git
           GIT_PRIVATE_KEY: ((github-private-key))
           GIT_USER_EMAIL: ((github-username))
