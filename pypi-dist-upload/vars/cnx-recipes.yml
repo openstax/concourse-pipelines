@@ -1,3 +1,0 @@
-github-repo: openstax/cnx-recipes
-setup-options: bdist_wheel --universal
-python-image-tag: 3

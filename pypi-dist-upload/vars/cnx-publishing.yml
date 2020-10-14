@@ -1,3 +1,0 @@
-github-repo: openstax/cnx-publishing
-setup-options: bdist_wheel
-python-image-tag: 2.7

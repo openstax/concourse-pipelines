@@ -1,3 +1,0 @@
-github-repo: openstax/cnx-transforms
-setup-options: bdist_wheel --universal
-python-image-tag: 2.7
