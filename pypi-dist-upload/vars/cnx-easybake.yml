@@ -1,3 +1,0 @@
-github-repo: openstax/cnx-easybake
-setup-options: bdist_wheel --universal
-python-image-tag: 2.7

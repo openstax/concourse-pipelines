@@ -122,6 +122,10 @@ resources:
 
 jobs:
   - name: build-and-publish-images
+    build_log_retention:
+      days: 7
+      builds: 3
+      minimum_succeeded_builds: 1
     public: true
     serial: true
     plan:

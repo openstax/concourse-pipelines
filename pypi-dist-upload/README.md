@@ -1,34 +1,34 @@
 # pypi-dist-upload
 
-The [./pipeline.yml](./pipeline.yml) included in the root of this directory is used to setup multiple Concourse pipelines for each python distribution utilizing variable substitution. The files that provide the variables are located in the [./vars](./vars) directory. The name of the file in [./vars](./vars) represents the package that will be uploaded to pypi. For example, [./vars/cnx-db.yml](./vars/cnx-db.yml) is the file for the [pypi/cnx-db](https://pypi.org/project/cnx-db/) package.
+All pypi uploads have been merged into one monolithic pipeline to reuse images and make changes that apply to all pipelines slightly easier.
 
-## Creating a pypi-dist-upload pipeline
+## Generate the pipeline definition
+To generate the pipeline you must have `npm` and `node` installed.
 
-* Copy the template file in [./vars/template.yml](./vars/template.yml) and overwrite with the appropriate name.
-
-```bash
-cp ./vars/template.yml ./vars/new-app.yml
+To install dependencies:
+```
+npm install
 ```
 
-* Open the new file and substitute the required values
-
-**EXAMPLE**  
-```yaml
-github-repo: openstax/new-app  
-setup-options: bdist_wheel --universal  
-python-image-tag: 3  
+To generate the pipeline definition (on stdout):
+```
+node index.js
 ```
 
-* Create the pipeline in Concourse by using the fly command and identifying the necessary file in the vars directory. Substitute with the appropriate values.
-
-```bash
-fly -t <target> set-pipeline --pipeline=<release-new-app> --config=./pipeline.yml --yaml-vars-from=<./vars/my-app.yml>
+To set or update the pipeline on concourse, assuming your target is called `concourse-v6`:
 ```
-
-## Update an already existing release pipeline
-
-* Run the `fly` command to `set-pipeline` using the existing vars file and pipeline file.
-
-```bash
-fly -t <target> set-pipeline --pipeline=release-cnx-deploy --config=./pipeline.yml --yaml-vars-from=./vars/cnx-db.yml
+fly -t concourse-v6 sp -p pypi-releases -c <(node index.js)
 ```
+then, confirm the changes before accepting.
+
+## Add another repo to the release list
+To add another repo to the release list, you must only add an entry to `repos.js`.
+e.g. 
+```
+{
+  githubRepo: 'openstax/cnx-archive',
+  setupOptions: 'bdist_wheel',
+  pythonImageTag: '2.7'
+},
+```
+will poll the `openstax/cnx-archive` repository and upload a new distribution to pypi, building with python2.7 when a new tag is pushed.
