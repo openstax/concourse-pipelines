@@ -2,13 +2,19 @@ const yaml = require('js-yaml')
 const dedent = require('dedent')
 const { repos } = require('./repos')
 
+const dockerCredentials = {
+  username: '((ce-dockerhub-id))',
+  password: '((ce-dockerhub-token))'
+}
+
 const createPythonImageResource = ({ resourceName, pythonImageTag }) => {
   return {
     name: resourceName,
     type: 'registry-image',
     source: {
       repository: 'python',
-      tag: pythonImageTag
+      tag: pythonImageTag,
+      ...dockerCredentials
     }
   }
 }
@@ -103,7 +109,10 @@ const CURL_IMAGE_NAME = 'curl-image'
 const curlImageResource = {
   name: CURL_IMAGE_NAME,
   type: 'registry-image',
-  source: { repository: 'curlimages/curl' }
+  source: {
+    repository: 'curlimages/curl',
+    ...dockerCredentials
+  }
 }
 
 const pythonResourcesVisited = []

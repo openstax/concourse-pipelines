@@ -1,9 +1,15 @@
+---
+docker-credentials: &docker-credentials
+  username: ((ce-dockerhub-id))
+  password: ((ce-dockerhub-token))
+
 resource_types:
 - name: curl
   type: docker-image
   source:
     repository: pivotalservices/concourse-curl-resource
     tag: latest
+    <<: *docker-credentials
 
 resources:
 - name: rex-environment-json
@@ -57,6 +63,7 @@ jobs:
         source:
           repository: python
           tag: 3.7-buster
+          <<: *docker-credentials
       inputs:
       - name: cnx-deploy
       - name: concourse-pipelines
@@ -89,6 +96,7 @@ jobs:
         source:
           repository: python
           tag: 3.7-buster
+          <<: *docker-credentials
       inputs:
       - name: cnx-deploy-updated
       - name: concourse-pipelines
