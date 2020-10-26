@@ -1,7 +1,7 @@
 ---
 docker-credentials: &docker-credentials
-  username: ((docker-hub-username))
-  password: ((docker-hub-password))
+  username: ((ce-dockerhub-id))
+  password: ((ce-dockerhub-token))
 
 image-build-config-common: &image-build-config-common
   platform: linux
@@ -147,7 +147,9 @@ jobs:
           platform: linux
           image_resource:
             type: docker-image
-            source: { repository: alpine/git }
+            source:
+              repository: alpine/git
+              <<: *docker-credentials
           inputs:
             - { name: source-code-nebuchadnezzar }
             - { name: source-code-cops }
