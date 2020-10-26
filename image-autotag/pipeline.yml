@@ -1,25 +1,20 @@
 ---
-tags-labels: &tags-labels
-  tag_file: tag/tag
-  additional_tags: tag/other
-  labels_file: labels/labels
-  tag_as_latest: false
-
-use-trunk-cache: &use-trunk-cache
-  cache: true
-  cache_tag: trunk
-
 docker-credentials: &docker-credentials
   username: ((docker-hub-username))
   password: ((docker-hub-password))
 
+image-build-config-common: &image-build-config-common
+  platform: linux
+  outputs: [{ name: image }]
+  caches: [{ path: cache }]
+  run: { path: build }
+
 resources:
-  # We leverage concourse's volume caching to provide the shared python:3.7-slim shared base
-  - name: python-3.7-slim
-    type: docker-image
+  - name: image-builder
+    type: registry-image
     source:
-      repository: python
-      tag: 3.7-slim
+      repository: vito/oci-build-task
+      <<: *docker-credentials
 
   - name: source-code-nebuchadnezzar
     type: git
@@ -27,28 +22,28 @@ resources:
       uri: https://github.com/openstax/nebuchadnezzar.git
       branch: master
   - name: docker-hub-image-nebuchadnezzar
-    type: docker-image
+    type: registry-image
     source:
       repository: openstax/nebuchadnezzar
       <<: *docker-credentials
 
-  - name: source-code-output-producer-service
+  - name: source-code-cops
     type: git
     source:
       uri: https://github.com/openstax/output-producer-service.git
       branch: master
-  - name: docker-hub-image-output-producer-frontend
-    type: docker-image
+  - name: docker-hub-image-cops-frontend
+    type: registry-image
     source:
       repository: openstax/output-producer-frontend
       <<: *docker-credentials
-  - name: docker-hub-image-output-producer-backend
-    type: docker-image
+  - name: docker-hub-image-cops-backend
+    type: registry-image
     source:
       repository: openstax/output-producer-backend
       <<: *docker-credentials
   - name: docker-hub-image-cops-bakery-scripts
-    type: docker-image
+    type: registry-image
     source:
       repository: openstax/cops-bakery-scripts
       <<: *docker-credentials
@@ -59,7 +54,7 @@ resources:
       uri: https://github.com/openstax/cnx-easybake.git
       branch: master
   - name: docker-hub-image-cnx-easybake
-    type: docker-image
+    type: registry-image
     source:
       repository: openstax/cnx-easybake
       <<: *docker-credentials
@@ -70,7 +65,7 @@ resources:
       uri: https://github.com/openstax/mathify.git
       branch: master
   - name: docker-hub-image-mathify
-    type: docker-image
+    type: registry-image
     source:
       repository: openstax/mathify
       <<: *docker-credentials
@@ -81,18 +76,18 @@ resources:
       uri: https://github.com/openstax/docker-princexml.git
       branch: master
   - name: docker-hub-image-princexml
-    type: docker-image
+    type: registry-image
     source:
       repository: openstax/princexml
       <<: *docker-credentials
 
-  - name: source-code-output-producer-resource
+  - name: source-code-cops-resource
     type: git
     source:
       uri: https://github.com/openstax/output-producer-resource.git
       branch: master
-  - name: docker-hub-image-output-producer-resource
-    type: docker-image
+  - name: docker-hub-image-cops-resource
+    type: registry-image
     source:
       repository: openstax/output-producer-resource
       <<: *docker-credentials
@@ -104,7 +99,7 @@ resources:
       branch: master
       tag_filter: '*'
   - name: docker-hub-image-cnx-recipes-output
-    type: docker-image
+    type: registry-image
     source:
       repository: openstax/cnx-recipes-output
       <<: *docker-credentials
@@ -115,7 +110,7 @@ resources:
       uri: https://github.com/openstax/xhtml-validator.git
       branch: trunk
   - name: docker-hub-image-xhtml-validator
-    type: docker-image
+    type: registry-image
     source:
       repository: openstax/xhtml-validator
       <<: *docker-credentials
@@ -130,9 +125,10 @@ jobs:
     serial: true
     plan:
       - in_parallel:
+        - get: image-builder
         - get: source-code-nebuchadnezzar
           trigger: true
-        - get: source-code-output-producer-service
+        - get: source-code-cops
           trigger: true
         - get: source-code-cnx-easybake
           trigger: true
@@ -140,138 +136,176 @@ jobs:
           trigger: true
         - get: source-code-princexml
           trigger: true
-        - get: source-code-output-producer-resource
+        - get: source-code-cops-resource
           trigger: true
         - get: source-code-cnx-recipes
           trigger: true
         - get: source-code-xhtml-validator
           trigger: true
-        - get: python-3.7-slim
-          params: {save: true}
       - task: report-versions-and-create-tag
         config:
           platform: linux
           image_resource:
             type: docker-image
-            source: {repository: alpine/git}
+            source: { repository: alpine/git }
           inputs:
             - { name: source-code-nebuchadnezzar }
-            - { name: source-code-output-producer-service }
+            - { name: source-code-cops }
             - { name: source-code-cnx-easybake }
             - { name: source-code-mathify }
             - { name: source-code-princexml }
-            - { name: source-code-output-producer-resource }
+            - { name: source-code-cops-resource }
             - { name: source-code-cnx-recipes }
             - { name: source-code-xhtml-validator }
-          outputs: [{name: 'tag'}, {name: 'versions'}]
+          outputs: [{ name: 'tags' }]
           run:
             path: /bin/sh
             args:
               - -cxe
               - |
-                git --git-dir=source-code-nebuchadnezzar/.git rev-parse --short HEAD > versions/nebuchadnezzar
-                git --git-dir=source-code-output-producer-service/.git rev-parse --short HEAD > versions/output-producer-service
-                git --git-dir=source-code-cnx-easybake/.git rev-parse --short HEAD > versions/cnx-easybake
-                git --git-dir=source-code-mathify/.git rev-parse --short HEAD > versions/mathify
-                git --git-dir=source-code-princexml/.git rev-parse --short HEAD > versions/princexml
-                git --git-dir=source-code-output-producer-resource/.git rev-parse --short HEAD > versions/output-producer-resource
-                git --git-dir=source-code-cnx-recipes/.git describe > versions/cnx-recipes
-                git --git-dir=source-code-xhtml-validator/.git rev-parse --short HEAD > versions/xhtml-validator
-
                 tag=$(date '+%Y%m%d.%H%M%S')
-                echo "$tag" > tag/tag
-                echo master > tag/other
-                echo trunk >> tag/other
-      - task: create-versions-metadata
-        config:
-          platform: linux
-          image_resource:
-            type: docker-image
-            source: {repository: stedolan/jq}
-          inputs: [{name: 'versions'}]
-          outputs: [{name: 'labels'}]
-          run:
-            path: /bin/sh
-            args:
-              - -cxe
-              - |
-                jq -n \
-                --arg version_neb $(cat versions/nebuchadnezzar) \
-                --arg version_cops $(cat versions/output-producer-service) \
-                --arg version_easybake $(cat versions/cnx-easybake) \
-                --arg version_mathify $(cat versions/mathify) \
-                --arg version_princexml $(cat versions/princexml) \
-                --arg version_cops_resource $(cat versions/output-producer-resource) \
-                --arg version_recipes $(cat versions/cnx-recipes) \
-                --arg version_xhtml_validator $(cat versions/xhtml-validator) \
-                '{ $version_neb, $version_cops, $version_easybake, $version_mathify, $version_princexml, $version_cops_resource, $version_recipes, $version_xhtml_validator }' \
-                > labels/labels
-
-                cat labels/labels
+                echo "$tag" > tags/tags
+                echo master >> tags/tags
+                echo trunk >> tags/tags
       - in_parallel:
           fail_fast: true
-          limit: 4
+          limit: 2
+          steps:
+            - task: build-nebuchadnezzar
+              privileged: true
+              image: image-builder
+              output_mapping: { image: built-image-nebuchadnezzar }
+              config:
+                params: { CONTEXT: source-code-nebuchadnezzar }
+                inputs: [{ name: source-code-nebuchadnezzar }]
+                <<: *image-build-config-common
+            - task: build-cops-frontend
+              privileged: true
+              image: image-builder
+              output_mapping: { image: built-image-cops-frontend }
+              config:
+                params: { CONTEXT: source-code-cops/frontend }
+                inputs: [{ name: source-code-cops }]
+                <<: *image-build-config-common
+            - task: build-cops-backend
+              privileged: true
+              image: image-builder
+              output_mapping: { image: built-image-cops-backend }
+              config:
+                params:
+                  CONTEXT: source-code-cops/backend
+                  DOCKERFILE: source-code-cops/backend/backend.dockerfile
+                inputs: [{ name: source-code-cops }]
+                <<: *image-build-config-common
+            - task: build-cops-bakery-scripts
+              privileged: true
+              image: image-builder
+              output_mapping: { image: built-image-cops-bakery-scripts }
+              config:
+                params: { CONTEXT: source-code-cops/bakery/src/scripts }
+                inputs: [{ name: source-code-cops }]
+                <<: *image-build-config-common
+            - task: build-cnx-easybake
+              privileged: true
+              image: image-builder
+              output_mapping: { image: built-image-cnx-easybake }
+              config:
+                params: { CONTEXT: source-code-cnx-easybake }
+                inputs: [{ name: source-code-cnx-easybake }]
+                <<: *image-build-config-common
+            - task: build-mathify
+              privileged: true
+              image: image-builder
+              output_mapping: { image: built-image-mathify }
+              config:
+                params: { CONTEXT: source-code-mathify }
+                inputs: [{ name: source-code-mathify }]
+                <<: *image-build-config-common
+            - task: build-princexml
+              privileged: true
+              image: image-builder
+              output_mapping: { image: built-image-princexml }
+              config:
+                params: { CONTEXT: source-code-princexml }
+                inputs: [{ name: source-code-princexml }]
+                <<: *image-build-config-common
+            - task: build-cops-resource
+              privileged: true
+              image: image-builder
+              output_mapping: { image: built-image-cops-resource }
+              config:
+                params: { CONTEXT: source-code-cops-resource }
+                inputs: [{ name: source-code-cops-resource }]
+                <<: *image-build-config-common
+            - task: build-cnx-recipes-output
+              privileged: true
+              image: image-builder
+              output_mapping: { image: built-image-cnx-recipes-output }
+              config:
+                params:
+                  CONTEXT: source-code-cnx-recipes
+                  DOCKERFILE: source-code-cnx-recipes/outputs.dockerfile
+                inputs: [{ name: source-code-cnx-recipes }]
+                <<: *image-build-config-common
+            - task: build-xthml-validator
+              privileged: true
+              image: image-builder
+              output_mapping: { image: built-image-xhtml-validator }
+              config:
+                params: { CONTEXT: source-code-xhtml-validator }
+                inputs: [{ name: source-code-xhtml-validator }]
+                <<: *image-build-config-common
+      - in_parallel:
+          fail_fast: true
+          limit: 2
           steps:
             - put: docker-hub-image-nebuchadnezzar
-              params:
-                build: source-code-nebuchadnezzar
-                load_base: python-3.7-slim
-                <<: *tags-labels
-                <<: *use-trunk-cache
-              get_params: {skip_download: true}
-            - put: docker-hub-image-output-producer-frontend
-              params:
-                build: source-code-output-producer-service/frontend
-                <<: *tags-labels
-                <<: *use-trunk-cache
-              get_params: {skip_download: true}
-            - put: docker-hub-image-output-producer-backend
-              params:
-                build: source-code-output-producer-service/backend
-                dockerfile: source-code-output-producer-service/backend/backend.dockerfile
-                <<: *tags-labels
-                <<: *use-trunk-cache
-              get_params: {skip_download: true}
+              params: 
+                image: built-image-nebuchadnezzar/image.tar
+                additional_tags: tags/tags
+              get_params: { skip_download: true }
+            - put: docker-hub-image-cops-frontend
+              params: 
+                image: built-image-cops-frontend/image.tar
+                additional_tags: tags/tags
+              get_params: { skip_download: true }
+            - put: docker-hub-image-cops-backend
+              params: 
+                image: built-image-cops-backend/image.tar
+                additional_tags: tags/tags
+              get_params: { skip_download: true }
             - put: docker-hub-image-cops-bakery-scripts
-              params:
-                build: source-code-output-producer-service/bakery/src/scripts
-                load_base: python-3.7-slim
-                <<: *tags-labels
-                <<: *use-trunk-cache
-              get_params: {skip_download: true}
+              params: 
+                image: built-image-cops-bakery-scripts/image.tar
+                additional_tags: tags/tags
+              get_params: { skip_download: true }
             - put: docker-hub-image-cnx-easybake
-              params:
-                build: source-code-cnx-easybake
-                load_base: python-3.7-slim
-                <<: *tags-labels
-                <<: *use-trunk-cache
-              get_params: {skip_download: true}
+              params: 
+                image: built-image-cnx-easybake/image.tar
+                additional_tags: tags/tags
+              get_params: { skip_download: true }
             - put: docker-hub-image-mathify
-              params:
-                build: source-code-mathify
-                <<: *tags-labels
-                <<: *use-trunk-cache
-              get_params: {skip_download: true}
+              params: 
+                image: built-image-mathify/image.tar
+                additional_tags: tags/tags
+              get_params: { skip_download: true }
             - put: docker-hub-image-princexml
-              params:
-                build: source-code-princexml
-                <<: *tags-labels
-                <<: *use-trunk-cache
-              get_params: {skip_download: true}
-            - put: docker-hub-image-output-producer-resource
-              params:
-                build: source-code-output-producer-resource
-                <<: *tags-labels
-                <<: *use-trunk-cache
-              get_params: {skip_download: true}
+              params: 
+                image: built-image-princexml/image.tar
+                additional_tags: tags/tags
+              get_params: { skip_download: true }
+            - put: docker-hub-image-cops-resource
+              params: 
+                image: built-image-cops-resource/image.tar
+                additional_tags: tags/tags
+              get_params: { skip_download: true }
             - put: docker-hub-image-cnx-recipes-output
-              params:
-                build: source-code-cnx-recipes
-                dockerfile: source-code-cnx-recipes/outputs.dockerfile
-                <<: *tags-labels
-              get_params: {skip_download: true}
+              params: 
+                image: built-image-cnx-recipes-output/image.tar
+                additional_tags: tags/tags
+              get_params: { skip_download: true }
             - put: docker-hub-image-xhtml-validator
-              params:
-                build: source-code-xhtml-validator
-                <<: *tags-labels
-              get_params: {skip_download: true}
+              params: 
+                image: built-image-xhtml-validator/image.tar
+                additional_tags: tags/tags
+              get_params: { skip_download: true }
