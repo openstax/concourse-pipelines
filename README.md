@@ -46,7 +46,7 @@ resources:
       tag_filter: '*'
 
   - name: docker-hub-image
-    type: docker-image
+    type: registry-image
     source:
       repository: docker-registry:5000/my-stuff  # We are pointing to the docker registry in docker-compose
       insecure_registries: ["docker-registry:5000"]  # Important that we specify that the registry is insecure
@@ -116,7 +116,7 @@ resources:
       tag_filter: '*'
 
   - name: docker-hub-image
-    type: docker-image
+    type: registry-image
     source:
       repository: docker-registry:5000/my-stuff  # Change this line to point to remote registry. Probably openstax/my-stuff (with no explicit host).
       insecure_registries: ["docker-registry:5000"]  # Remove this line

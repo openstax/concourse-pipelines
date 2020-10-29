@@ -12,7 +12,7 @@ resources:
       tag_filter: '*'
 
   - name: docker-hub-image
-    type: docker-image
+    type: registry-image
     source:
       repository: openstax/((github-repo))
       username: ((docker-hub-username))
@@ -28,7 +28,7 @@ jobs:
         config:
           platform: linux
           image_resource:
-            type: docker-image
+            type: registry-image
             source: {repository: busybox}
           outputs: [{name: 'tag-file'}]
           run:
@@ -53,7 +53,7 @@ jobs:
         config:
           platform: linux
           image_resource:
-            type: docker-image
+            type: registry-image
             source: {repository: alpine/git}
           inputs: [{name: 'source-code-tagged'}]
           outputs: [{name: 'tag-files'}]
