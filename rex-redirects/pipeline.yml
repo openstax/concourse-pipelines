@@ -5,7 +5,7 @@ docker-credentials: &docker-credentials
 
 resource_types:
 - name: curl
-  type: docker-image
+  type: registry-image
   source:
     repository: pivotalservices/concourse-curl-resource
     tag: latest
@@ -59,7 +59,7 @@ jobs:
     config:
       platform: linux
       image_resource:
-        type: docker-image
+        type: registry-image
         source:
           repository: python
           tag: 3.7-buster
@@ -92,7 +92,7 @@ jobs:
     config:
       platform: linux
       image_resource:
-        type: docker-image
+        type: registry-image
         source:
           repository: python
           tag: 3.7-buster
