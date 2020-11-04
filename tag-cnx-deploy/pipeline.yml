@@ -17,10 +17,13 @@ resources:
 
 jobs:
   - name: tag-cnx-deploy
+    build_log_retention:
+      builds: 3
+      minimum_succeeded_builds: 1
     plan:
       - get: cnx-deploy
         trigger: true
-      
+
       - get: concourse-pipelines
 
       - task: tag-n-publish
