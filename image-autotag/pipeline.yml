@@ -13,7 +13,8 @@ resources:
   - name: image-builder
     type: registry-image
     source:
-      repository: vito/oci-build-task
+      repository: tomjw64/oci-build-task
+      tag: labels-support
       <<: *docker-credentials
 
   - name: source-code-nebuchadnezzar
@@ -142,6 +143,28 @@ jobs:
           trigger: true
         - get: source-code-xhtml-validator
           trigger: true
+      # Use this task until buildkit + oci-build-task support docker hub auth
+      - task: generate-dockerhub-config
+        config:
+          platform: linux
+          image_resource:
+            type: registry-image
+            source:
+              repository: alpine
+              <<: *docker-credentials
+          outputs: [{ name: docker-config }]
+          params:
+            DOCKER_USERNAME: ((ce-dockerhub-id))
+            DOCKER_PASSWORD: ((ce-dockerhub-token))
+          run:
+            path: /bin/sh
+            args:
+              - -c
+              - |
+                AUTH="$(echo -n "$DOCKER_USERNAME:$DOCKER_PASSWORD" | base64)"
+                cat > docker-config/config.json <<EOF
+                { "auths": { "https://index.docker.io/v1/": { "auth": "$AUTH", "email": "devops@openstax.org" }}}
+                EOF
       - task: report-versions-and-create-tag
         config:
           platform: linux
@@ -151,24 +174,38 @@ jobs:
               repository: alpine/git
               <<: *docker-credentials
           inputs:
-            - { name: source-code-nebuchadnezzar }
-            - { name: source-code-cops }
-            - { name: source-code-cnx-easybake }
-            - { name: source-code-mathify }
-            - { name: source-code-princexml }
-            - { name: source-code-cops-resource }
-            - { name: source-code-cnx-recipes }
-            - { name: source-code-xhtml-validator }
-          outputs: [{ name: 'tags' }]
+            - name: source-code-nebuchadnezzar
+            - name: source-code-cops
+            - name: source-code-cnx-easybake
+            - name: source-code-mathify
+            - name: source-code-princexml
+            - name: source-code-cops-resource
+            - name: source-code-cnx-recipes
+            - name: source-code-xhtml-validator
+          outputs:
+            - name: tags
+            - name: labels
           run:
             path: /bin/sh
             args:
               - -cxe
               - |
+                echo revision_nebuchadnezzar=$(git --git-dir=source-code-nebuchadnezzar/.git rev-parse --short HEAD) >> labels/labels
+                echo revision_cops=$(git --git-dir=source-code-cops/.git rev-parse --short HEAD) >> labels/labels
+                echo revision_cnx_easybake=$(git --git-dir=source-code-cnx-easybake/.git rev-parse --short HEAD) >> labels/labels
+                echo revision_mathify=$(git --git-dir=source-code-mathify/.git rev-parse --short HEAD) >> labels/labels
+                echo revision_princexml=$(git --git-dir=source-code-princexml/.git rev-parse --short HEAD) >> labels/labels
+                echo revision_cops_resource=$(git --git-dir=source-code-cops-resource/.git rev-parse --short HEAD) >> labels/labels
+                echo revision_cnx_recipes=$(git --git-dir=source-code-cnx-recipes/.git rev-parse --short HEAD) >> labels/labels
+                echo revision_xhtml_validator=$(git --git-dir=source-code-xhtml-validator/.git rev-parse --short HEAD) >> labels/labels
+
                 tag=$(date '+%Y%m%d.%H%M%S')
-                echo "$tag" > tags/tags
+                echo "$tag" >> tags/tags
                 echo master >> tags/tags
                 echo trunk >> tags/tags
+
+                cat tags/tags
+                cat labels/labels
       - in_parallel:
           fail_fast: true
           limit: 2
@@ -178,16 +215,28 @@ jobs:
               image: image-builder
               output_mapping: { image: built-image-nebuchadnezzar }
               config:
-                params: { CONTEXT: source-code-nebuchadnezzar }
-                inputs: [{ name: source-code-nebuchadnezzar }]
+                params:
+                  LABELS_FILE: labels/labels
+                  DOCKER_CONFIG: docker-config
+                  CONTEXT: source-code-nebuchadnezzar
+                inputs:
+                  - name: labels
+                  - name: docker-config
+                  - name: source-code-nebuchadnezzar
                 <<: *image-build-config-common
             - task: build-cops-frontend
               privileged: true
               image: image-builder
               output_mapping: { image: built-image-cops-frontend }
               config:
-                params: { CONTEXT: source-code-cops/frontend }
-                inputs: [{ name: source-code-cops }]
+                params:
+                  LABELS_FILE: labels/labels
+                  DOCKER_CONFIG: docker-config
+                  CONTEXT: source-code-cops/frontend
+                inputs:
+                  - name: labels
+                  - name: docker-config
+                  - name: source-code-cops
                 <<: *image-build-config-common
             - task: build-cops-backend
               privileged: true
@@ -195,49 +244,84 @@ jobs:
               output_mapping: { image: built-image-cops-backend }
               config:
                 params:
+                  LABELS_FILE: labels/labels
+                  DOCKER_CONFIG: docker-config
                   CONTEXT: source-code-cops/backend
                   DOCKERFILE: source-code-cops/backend/backend.dockerfile
-                inputs: [{ name: source-code-cops }]
+                inputs:
+                  - name: labels
+                  - name: docker-config
+                  - name: source-code-cops
                 <<: *image-build-config-common
             - task: build-cops-bakery-scripts
               privileged: true
               image: image-builder
               output_mapping: { image: built-image-cops-bakery-scripts }
               config:
-                params: { CONTEXT: source-code-cops/bakery/src/scripts }
-                inputs: [{ name: source-code-cops }]
+                params:
+                  LABELS_FILE: labels/labels
+                  DOCKER_CONFIG: docker-config
+                  CONTEXT: source-code-cops/bakery/src/scripts
+                inputs:
+                  - name: labels
+                  - name: docker-config
+                  - name: source-code-cops
                 <<: *image-build-config-common
             - task: build-cnx-easybake
               privileged: true
               image: image-builder
               output_mapping: { image: built-image-cnx-easybake }
               config:
-                params: { CONTEXT: source-code-cnx-easybake }
-                inputs: [{ name: source-code-cnx-easybake }]
+                params:
+                  LABELS_FILE: labels/labels
+                  DOCKER_CONFIG: docker-config
+                  CONTEXT: source-code-cnx-easybake
+                inputs:
+                  - name: labels
+                  - name: docker-config
+                  - name: source-code-cnx-easybake
                 <<: *image-build-config-common
             - task: build-mathify
               privileged: true
               image: image-builder
               output_mapping: { image: built-image-mathify }
               config:
-                params: { CONTEXT: source-code-mathify }
-                inputs: [{ name: source-code-mathify }]
+                params:
+                  LABELS_FILE: labels/labels
+                  DOCKER_CONFIG: docker-config
+                  CONTEXT: source-code-mathify
+                inputs:
+                  - name: labels
+                  - name: docker-config
+                  - name: source-code-mathify
                 <<: *image-build-config-common
             - task: build-princexml
               privileged: true
               image: image-builder
               output_mapping: { image: built-image-princexml }
               config:
-                params: { CONTEXT: source-code-princexml }
-                inputs: [{ name: source-code-princexml }]
+                params:
+                  LABELS_FILE: labels/labels
+                  DOCKER_CONFIG: docker-config
+                  CONTEXT: source-code-princexml
+                inputs:
+                  - name: labels
+                  - name: docker-config
+                  - name: source-code-princexml
                 <<: *image-build-config-common
             - task: build-cops-resource
               privileged: true
               image: image-builder
               output_mapping: { image: built-image-cops-resource }
               config:
-                params: { CONTEXT: source-code-cops-resource }
-                inputs: [{ name: source-code-cops-resource }]
+                params:
+                  LABELS_FILE: labels/labels
+                  DOCKER_CONFIG: docker-config
+                  CONTEXT: source-code-cops-resource
+                inputs:
+                  - name: labels
+                  - name: docker-config
+                  - name: source-code-cops-resource
                 <<: *image-build-config-common
             - task: build-cnx-recipes-output
               privileged: true
@@ -245,17 +329,28 @@ jobs:
               output_mapping: { image: built-image-cnx-recipes-output }
               config:
                 params:
+                  LABELS_FILE: labels/labels
+                  DOCKER_CONFIG: docker-config
                   CONTEXT: source-code-cnx-recipes
                   DOCKERFILE: source-code-cnx-recipes/outputs.dockerfile
-                inputs: [{ name: source-code-cnx-recipes }]
+                inputs:
+                  - name: labels
+                  - name: docker-config
+                  - name: source-code-cnx-recipes
                 <<: *image-build-config-common
             - task: build-xthml-validator
               privileged: true
               image: image-builder
               output_mapping: { image: built-image-xhtml-validator }
               config:
-                params: { CONTEXT: source-code-xhtml-validator }
-                inputs: [{ name: source-code-xhtml-validator }]
+                params:
+                  LABELS_FILE: labels/labels
+                  DOCKER_CONFIG: docker-config
+                  CONTEXT: source-code-xhtml-validator
+                inputs:
+                  - name: labels
+                  - name: docker-config
+                  - name: source-code-xhtml-validator
                 <<: *image-build-config-common
       - in_parallel:
           fail_fast: true
