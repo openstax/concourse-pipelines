@@ -1,0 +1,111 @@
+---
+docker-credentials: &docker-credentials
+  username: ((ce-dockerhub-id))
+  password: ((ce-dockerhub-token))
+
+resources:
+  - name: source-code
+    type: git
+    source:
+      uri: https://github.com/openstax/output-producer-service.git
+      branch: master
+
+jobs:
+  - name: publish on npm
+    build_log_retention:
+      builds: 3
+      minimum_succeeded_builds: 1
+    public: true
+    serial: true
+    plan:
+      - get: source-code
+        trigger: true
+        version: every
+      - task: did-bakery-change
+        config:
+          platform: linux
+          image_resource:
+            type: registry-image
+            source:
+              repository: openstax/cops-bakery-scripts
+              tag: trunk
+              <<: *docker-credentials
+          inputs: [{ name: source-code }]
+          run:
+            path: /bin/sh
+            args:
+              - -cxe
+              - |
+                cd source-code
+                # if bakery didn't change, immediately fail, since we don't need a new version
+                git diff --quiet master master~1 -- bakery && exit 1
+      - task: gen-new-version
+        config:
+          platform: linux
+          image_resource:
+            type: registry-image
+            source:
+              repository: node
+              <<: *docker-credentials
+          inputs: [{ name: source-code }]
+          outputs: [{ name: new-version }]
+          run:
+            path: /bin/bash
+            args:
+              - -cxe
+              - |
+                # assume every change is breaking and just increment the major version
+                source-code/scripts/gen-incremented-bakery-version.sh major > new-version/version
+      - task: gen-new-package-json
+        config:
+          platform: linux
+          image_resource:
+            type: docker-image
+            source:
+              repository: stedolan/jq
+              <<: *docker-credentials
+          inputs:
+            - name: source-code
+            - name: new-version
+          outputs: [{ name: package-json }]
+          run:
+            path: /bin/bash
+            args:
+              - -cxe
+              - |
+                new_version=$(cat new-version/version)
+                jq --arg version "$new_version"  '. + {version: $version}' source-code/bakery/package.json > package-json/package.json
+      - task: publish
+        config:
+          platform: linux
+          image_resource:
+            type: registry-image
+            source:
+              repository: node
+              <<: *docker-credentials
+          inputs:
+            - name: source-code
+            - name: package-json
+          params:
+            NPM_TOKEN: ((staxly-npm-access-key))
+          run:
+            path: /bin/bash
+            args:
+              - -cxe
+              - |
+                user=staxly
+                mail=devops@openstax.org
+
+                # Do not show creds
+                set +x
+                echo "//registry.npmjs.com/:_authToken=$NPM_TOKEN" >> ~/.npmrc
+                echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" >> ~/.npmrc
+                set -x
+
+                cp package-json/package.json source-code/bakery/package.json
+                cd source-code/bakery
+                npm run package
+                cd dist
+                # There should only be one file
+                pack=$(find . -type f)
+                npm publish "$pack"
