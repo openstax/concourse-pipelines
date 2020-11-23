@@ -9,6 +9,8 @@ resources:
     source:
       uri: https://github.com/openstax/output-producer-service.git
       branch: master
+      paths:
+        - ./bakery
 
 jobs:
   - name: publish on npm
@@ -21,24 +23,6 @@ jobs:
       - get: source-code
         trigger: true
         version: every
-      - task: did-bakery-change
-        config:
-          platform: linux
-          image_resource:
-            type: registry-image
-            source:
-              repository: openstax/cops-bakery-scripts
-              tag: trunk
-              <<: *docker-credentials
-          inputs: [{ name: source-code }]
-          run:
-            path: /bin/sh
-            args:
-              - -cxe
-              - |
-                cd source-code
-                # if bakery didn't change, immediately fail, since we don't need a new version
-                git diff --quiet master master~1 -- bakery && exit 1
       - task: gen-new-version
         config:
           platform: linux
