@@ -105,6 +105,17 @@ resources:
       repository: openstax/cnx-recipes-output
       <<: *docker-credentials
 
+  - name: source-code-kitchen-recipes
+    type: git
+    source:
+      uri: https://github.com/openstax/recipes.git
+      branch: main
+  - name: docker-hub-image-kitchen-recipes
+    type: registry-image
+    source:
+      repository: openstax/recipes
+      <<: *docker-credentials
+
   - name: source-code-xhtml-validator
     type: git
     source:
@@ -140,6 +151,8 @@ jobs:
         - get: source-code-cops-resource
           trigger: true
         - get: source-code-cnx-recipes
+          trigger: true
+        - get: source-code-kitchen-recipes
           trigger: true
         - get: source-code-xhtml-validator
           trigger: true
@@ -181,6 +194,7 @@ jobs:
             - name: source-code-princexml
             - name: source-code-cops-resource
             - name: source-code-cnx-recipes
+            - name: source-code-kitchen-recipes
             - name: source-code-xhtml-validator
           outputs:
             - name: tags
@@ -197,6 +211,7 @@ jobs:
                 echo revision_princexml=$(git --git-dir=source-code-princexml/.git rev-parse --short HEAD) >> labels/labels
                 echo revision_cops_resource=$(git --git-dir=source-code-cops-resource/.git rev-parse --short HEAD) >> labels/labels
                 echo revision_cnx_recipes=$(git --git-dir=source-code-cnx-recipes/.git rev-parse --short HEAD) >> labels/labels
+                echo revision_kitchen_recipes=$(git --git-dir=source-code-kitchen-recipes/.git rev-parse --short HEAD) >> labels/labels
                 echo revision_xhtml_validator=$(git --git-dir=source-code-xhtml-validator/.git rev-parse --short HEAD) >> labels/labels
 
                 tag=$(date '+%Y%m%d.%H%M%S')
@@ -338,6 +353,22 @@ jobs:
                   - name: docker-config
                   - name: source-code-cnx-recipes
                 <<: *image-build-config-common
+            - task: build-kitchen-recipes
+              privileged: true
+              image: image-builder
+              output_mapping: { image: built-image-kitchen-recipes }
+              config:
+                params:
+                  LABELS_FILE: labels/labels
+                  DOCKER_CONFIG: docker-config
+                  CONTEXT: source-code-kitchen-recipes
+                  TARGET: runtime-env
+                  DOCKERFILE: source-code-kitchen-recipes/docker/Dockerfile
+                inputs:
+                  - name: labels
+                  - name: docker-config
+                  - name: source-code-kitchen-recipes
+                <<: *image-build-config-common
             - task: build-xthml-validator
               privileged: true
               image: image-builder
@@ -399,6 +430,11 @@ jobs:
             - put: docker-hub-image-cnx-recipes-output
               params: 
                 image: built-image-cnx-recipes-output/image.tar
+                additional_tags: tags/tags
+              get_params: { skip_download: true }
+            - put: docker-hub-image-kitchen-recipes
+              params:
+                image: built-image-kitchen-recipes/image.tar
                 additional_tags: tags/tags
               get_params: { skip_download: true }
             - put: docker-hub-image-xhtml-validator
