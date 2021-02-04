@@ -7,7 +7,7 @@ resources:
 - name: source-code
   type: git
   source:
-    uri: https://github.com/openstax/pro-editing-tool.git
+    uri: https://github.com/openstax/poet.git
     branch: main
     tag_filter: '*'
 
