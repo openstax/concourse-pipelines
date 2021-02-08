@@ -49,17 +49,6 @@ resources:
       repository: openstax/cops-bakery-scripts
       <<: *docker-credentials
 
-  - name: source-code-cnx-easybake
-    type: git
-    source:
-      uri: https://github.com/openstax/cnx-easybake.git
-      branch: master
-  - name: docker-hub-image-cnx-easybake
-    type: registry-image
-    source:
-      repository: openstax/cnx-easybake
-      <<: *docker-credentials
-
   - name: source-code-mathify
     type: git
     source:
@@ -142,8 +131,6 @@ jobs:
           trigger: true
         - get: source-code-cops
           trigger: true
-        - get: source-code-cnx-easybake
-          trigger: true
         - get: source-code-mathify
           trigger: true
         - get: source-code-princexml
@@ -189,7 +176,6 @@ jobs:
           inputs:
             - name: source-code-nebuchadnezzar
             - name: source-code-cops
-            - name: source-code-cnx-easybake
             - name: source-code-mathify
             - name: source-code-princexml
             - name: source-code-cops-resource
@@ -206,7 +192,6 @@ jobs:
               - |
                 echo revision_nebuchadnezzar=$(git --git-dir=source-code-nebuchadnezzar/.git rev-parse --short HEAD) >> labels/labels
                 echo revision_cops=$(git --git-dir=source-code-cops/.git rev-parse --short HEAD) >> labels/labels
-                echo revision_cnx_easybake=$(git --git-dir=source-code-cnx-easybake/.git rev-parse --short HEAD) >> labels/labels
                 echo revision_mathify=$(git --git-dir=source-code-mathify/.git rev-parse --short HEAD) >> labels/labels
                 echo revision_princexml=$(git --git-dir=source-code-princexml/.git rev-parse --short HEAD) >> labels/labels
                 echo revision_cops_resource=$(git --git-dir=source-code-cops-resource/.git rev-parse --short HEAD) >> labels/labels
@@ -281,20 +266,6 @@ jobs:
                   - name: labels
                   - name: docker-config
                   - name: source-code-cops
-                <<: *image-build-config-common
-            - task: build-cnx-easybake
-              privileged: true
-              image: image-builder
-              output_mapping: { image: built-image-cnx-easybake }
-              config:
-                params:
-                  LABELS_FILE: labels/labels
-                  DOCKER_CONFIG: docker-config
-                  CONTEXT: source-code-cnx-easybake
-                inputs:
-                  - name: labels
-                  - name: docker-config
-                  - name: source-code-cnx-easybake
                 <<: *image-build-config-common
             - task: build-mathify
               privileged: true
@@ -405,11 +376,6 @@ jobs:
             - put: docker-hub-image-cops-bakery-scripts
               params: 
                 image: built-image-cops-bakery-scripts/image.tar
-                additional_tags: tags/tags
-              get_params: { skip_download: true }
-            - put: docker-hub-image-cnx-easybake
-              params: 
-                image: built-image-cnx-easybake/image.tar
                 additional_tags: tags/tags
               get_params: { skip_download: true }
             - put: docker-hub-image-mathify
