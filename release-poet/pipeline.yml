@@ -78,6 +78,6 @@ jobs:
                 cp package-json/package.json source-code/package.json
                 cd source-code
                 npm install
-                npm run package
+                npm run build:production
                 npm install ovsx
                 npx ovsx publish editor-*.vsix -p $OPENVSX_TOKEN
