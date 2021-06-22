@@ -99,6 +99,7 @@ resources:
     source:
       uri: https://github.com/openstax/recipes.git
       branch: main
+      tag_filter: '*'
   - name: docker-hub-image-kitchen-recipes
     type: registry-image
     source:
