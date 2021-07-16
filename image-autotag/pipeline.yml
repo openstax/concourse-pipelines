@@ -13,8 +13,8 @@ resources:
   - name: image-builder
     type: registry-image
     source:
-      repository: tomjw64/oci-build-task
-      tag: labels-support
+      repository: concourse/oci-build-task
+      tag: latest
       <<: *docker-credentials
 
   - name: source-code-nebuchadnezzar
