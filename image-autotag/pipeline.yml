@@ -6,6 +6,7 @@ docker-credentials: &docker-credentials
 ecr-credentials: &ecr-credentials
   aws_secret_access_key: ((ce_ecr_user_access_key))
   aws_access_key_id: ((ce_ecr_user_access_key_id))
+  aws_region: us-east-2
 
 image-build-config-common: &image-build-config-common
   platform: linux
@@ -34,7 +35,7 @@ resources:
   - name: ecr-image-nebuchadnezzar
     type: registry-image
     source:
-      repository: 258998078732.dkr.ecr.us-east-2.amazonaws.com/nebuchadnezzar
+      repository: nebuchadnezzar
       <<: *ecr-credentials
 
   - name: source-code-cops
@@ -50,7 +51,7 @@ resources:
   - name: ecr-image-corgi-frontend
     type: registry-image
     source:
-      repository: 258998078732.dkr.ecr.us-east-2.amazonaws.com/corgi-frontend
+      repository: corgi-frontend
       <<: *ecr-credentials
   
 
@@ -62,7 +63,7 @@ resources:
   - name: ecr-image-corgi-backend
     type: registry-image
     source:
-      repository: 258998078732.dkr.ecr.us-east-2.amazonaws.com/corgi-backend
+      repository: corgi-backend
       <<: *ecr-credentials
 
   - name: docker-hub-image-cops-bakery-scripts
@@ -73,7 +74,7 @@ resources:
   - name: ecr-image-corgi-bakery-scripts
     type: registry-image
     source:
-      repository: 258998078732.dkr.ecr.us-east-2.amazonaws.com/corgi-bakery-scripts
+      repository: corgi-bakery-scripts
       <<: *ecr-credentials
 
   - name: source-code-mathify
@@ -89,7 +90,7 @@ resources:
   - name: ecr-image-mathify
     type: registry-image
     source:
-      repository: 258998078732.dkr.ecr.us-east-2.amazonaws.com/mathify
+      repository: mathify
       <<: *ecr-credentials
 
   - name: source-code-princexml
@@ -105,7 +106,7 @@ resources:
   - name: ecr-image-princexml
     type: registry-image
     source:
-      repository: 258998078732.dkr.ecr.us-east-2.amazonaws.com/princexml
+      repository: princexml
       <<: *ecr-credentials
 
   - name: source-code-cops-resource
@@ -121,7 +122,7 @@ resources:
   - name: ecr-image-corgi-resource
     type: registry-image
     source:
-      repository: 258998078732.dkr.ecr.us-east-2.amazonaws.com/corgi-resource
+      repository: corgi-resource
       <<: *ecr-credentials
 
   - name: source-code-cnx-recipes
@@ -138,7 +139,7 @@ resources:
   - name: ecr-image-cnx-recipes-output
     type: registry-image
     source:
-      repository: 258998078732.dkr.ecr.us-east-2.amazonaws.com/cnx-recipes-output
+      repository: cnx-recipes-output
       <<: *ecr-credentials
 
   - name: source-code-kitchen-recipes
@@ -155,7 +156,7 @@ resources:
   - name: ecr-image-kitchen-recipes
     type: registry-image
     source:
-      repository: 258998078732.dkr.ecr.us-east-2.amazonaws.com/recipes
+      repository: recipes
       <<: *ecr-credentials
 
   - name: source-code-xhtml-validator
@@ -171,7 +172,7 @@ resources:
   - name: ecr-image-xhtml-validator
     type: registry-image
     source:
-      repository: 258998078732.dkr.ecr.us-east-2.amazonaws.com/xhtml-validator
+      repository: xhtml-validator
       <<: *ecr-credentials
 
 jobs:
