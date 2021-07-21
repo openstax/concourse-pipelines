@@ -168,7 +168,7 @@ resources:
     source:
       repository: openstax/xhtml-validator
       <<: *docker-credentials
-- name: ecr-image-xhtml-validator
+  - name: ecr-image-xhtml-validator
     type: registry-image
     source:
       repository: 258998078732.dkr.ecr.us-east-2.amazonaws.com/xhtml-validator
