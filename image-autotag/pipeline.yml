@@ -447,16 +447,6 @@ jobs:
                 image: built-image-cops-backend/image.tar
                 additional_tags: tags/tags
               get_params: { skip_download: true }
-            - put: docker-hub-image-cops-bakery-scripts
-              params: 
-                image: built-image-cops-bakery-scripts/image.tar
-                additional_tags: tags/tags
-              get_params: { skip_download: true }
-            - put: ecr-image-corgi-bakery-scripts
-              params: 
-                image: built-image-cops-bakery-scripts/image.tar
-                additional_tags: tags/tags
-              get_params: { skip_download: true }
             - put: docker-hub-image-mathify
               params: 
                 image: built-image-mathify/image.tar
@@ -515,5 +505,25 @@ jobs:
             - put: ecr-image-xhtml-validator
               params: 
                 image: built-image-xhtml-validator/image.tar
+                additional_tags: tags/tags
+              get_params: { skip_download: true }
+
+      # Run this last because https://github.com/openstax/auto-deploy-corgi 
+      # reads the bakery-scripts tag to determine what to deploy.
+      # And if one other other repos fails then this step should not run.
+      # Otherwise, the auto-deploy will succeed but when a staging pipeline
+      # starts up it will fail because the docker image does not exist.
+      - in_parallel:
+          fail_fast: true
+          limit: 2
+          steps:
+            - put: docker-hub-image-cops-bakery-scripts
+              params: 
+                image: built-image-cops-bakery-scripts/image.tar
+                additional_tags: tags/tags
+              get_params: { skip_download: true }
+            - put: ecr-image-corgi-bakery-scripts
+              params: 
+                image: built-image-cops-bakery-scripts/image.tar
                 additional_tags: tags/tags
               get_params: { skip_download: true }
