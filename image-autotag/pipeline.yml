@@ -433,6 +433,16 @@ jobs:
                   - name: docker-config
                   - name: source-code-xhtml-validator
                 <<: *image-build-config-common
+            - task: prep-richb-press
+                config:
+                  platform: linux
+                  image_resource:
+                    type: registry-image
+                    source:
+                      repository: alpine/git
+                      <<: *docker-credentials
+                    
+
             - task: build-richb-press
               privileged: true
               image: image-builder
