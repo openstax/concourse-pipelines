@@ -179,7 +179,8 @@ resources:
     type: git
     source:
       uri: https://github.com/openstax/richb-press.git
-      branch: master
+      branch: main
+      submodules: all
   - name: docker-hub-image-richb-press
     type: registry-image
     source:
@@ -433,15 +434,6 @@ jobs:
                   - name: docker-config
                   - name: source-code-xhtml-validator
                 <<: *image-build-config-common
-            - task: prep-richb-press
-                config:
-                  platform: linux
-                  image_resource:
-                    type: registry-image
-                    source:
-                      repository: alpine/git
-                      <<: *docker-credentials
-                    
 
             - task: build-richb-press
               privileged: true
@@ -457,6 +449,7 @@ jobs:
                   - name: docker-config
                   - name: source-code-richb-press
                 <<: *image-build-config-common
+
 
       - in_parallel:
           fail_fast: true
