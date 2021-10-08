@@ -174,6 +174,24 @@ resources:
     source:
       repository: xhtml-validator
       <<: *ecr-credentials
+  
+  - name: source-code-richb-press
+    type: git
+    source:
+      uri: https://github.com/openstax/richb-press.git
+      branch: main
+      submodules: all
+  - name: docker-hub-image-richb-press
+    type: registry-image
+    source:
+      repository: openstax/richb-press
+      <<: *docker-credentials
+  - name: ecr-image-richb-press
+    type: registry-image
+    source:
+      repository: richb-press
+      <<: *ecr-credentials
+  
 
 jobs:
   - name: build-and-publish-images
@@ -201,6 +219,8 @@ jobs:
         - get: source-code-kitchen-recipes
           trigger: true
         - get: source-code-xhtml-validator
+          trigger: true
+        - get: source-code-richb-press
           trigger: true
       # Use this task until buildkit + oci-build-task support docker hub auth
       - task: generate-dockerhub-config
@@ -241,6 +261,7 @@ jobs:
             - name: source-code-cnx-recipes
             - name: source-code-kitchen-recipes
             - name: source-code-xhtml-validator
+            - name: source-code-richb-press
           outputs:
             - name: tags
             - name: labels
@@ -257,7 +278,7 @@ jobs:
                 echo revision_cnx_recipes=$(git --git-dir=source-code-cnx-recipes/.git rev-parse --short HEAD) >> labels/labels
                 echo revision_kitchen_recipes=$(git --git-dir=source-code-kitchen-recipes/.git rev-parse --short HEAD) >> labels/labels
                 echo revision_xhtml_validator=$(git --git-dir=source-code-xhtml-validator/.git rev-parse --short HEAD) >> labels/labels
-
+                echo revision_richb_press=$(git --git-dir=source-code-richb-press/.git rev-parse --short HEAD) >> labels/labels
                 tag=$(date '+%Y%m%d.%H%M%S')
                 echo "$tag" >> tags/tags
                 echo master >> tags/tags
@@ -413,6 +434,23 @@ jobs:
                   - name: docker-config
                   - name: source-code-xhtml-validator
                 <<: *image-build-config-common
+
+            - task: build-richb-press
+              privileged: true
+              image: image-builder
+              output_mapping: { image: built-image-richb-press }
+              config:
+                params:
+                  LABELS_FILE: labels/labels
+                  DOCKER_CONFIG: docker-config
+                  CONTEXT: source-code-richb-press
+                inputs:
+                  - name: labels
+                  - name: docker-config
+                  - name: source-code-richb-press
+                <<: *image-build-config-common
+
+
       - in_parallel:
           fail_fast: true
           limit: 2
@@ -505,6 +543,16 @@ jobs:
             - put: ecr-image-xhtml-validator
               params: 
                 image: built-image-xhtml-validator/image.tar
+                additional_tags: tags/tags
+              get_params: { skip_download: true }
+            - put: docker-hub-image-richb-press
+              params: 
+                image: built-image-richb-press/image.tar
+                additional_tags: tags/tags
+              get_params: { skip_download: true }
+            - put: ecr-image-richb-press
+              params: 
+                image: built-image-richb-press/image.tar
                 additional_tags: tags/tags
               get_params: { skip_download: true }
 
