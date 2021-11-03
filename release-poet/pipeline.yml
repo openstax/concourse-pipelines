@@ -64,6 +64,7 @@ jobs:
             type: registry-image
             source:
               repository: node
+              tag: lts
               <<: *docker-credentials
           inputs:
             - name: source-code
@@ -82,4 +83,5 @@ jobs:
                 npm run build:production
                 npm install ovsx
                 npx ovsx publish editor-*.vsix -p $OPENVSX_TOKEN
-                npx vsce login $(node -p "require('./package.json').publisher") <<< $VSCE_TOKEN && npx vsce publish --no-git-tag-version
+                read version publisher <<< $(node -p "const pkg = require('./package.json'); [pkg.version, pkg.publisher].join(' ')")
+                npx vsce login $publisher <<< $VSCE_TOKEN && npx vsce publish $version
