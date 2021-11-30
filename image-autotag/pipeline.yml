@@ -54,7 +54,6 @@ resources:
       repository: corgi-frontend
       <<: *ecr-credentials
   
-
   - name: docker-hub-image-cops-backend
     type: registry-image
     source:
