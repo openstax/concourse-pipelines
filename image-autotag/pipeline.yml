@@ -38,12 +38,12 @@ resources:
       repository: nebuchadnezzar
       <<: *ecr-credentials
 
-  - name: source-code-cops
+  - name: source-code-corgi
     type: git
     source:
       uri: https://github.com/openstax/output-producer-service.git
       branch: master
-  - name: docker-hub-image-cops-frontend
+  - name: docker-hub-image-corgi-frontend
     type: registry-image
     source:
       repository: openstax/output-producer-frontend
@@ -54,7 +54,7 @@ resources:
       repository: corgi-frontend
       <<: *ecr-credentials
   
-  - name: docker-hub-image-cops-backend
+  - name: docker-hub-image-corgi-backend
     type: registry-image
     source:
       repository: openstax/output-producer-backend
@@ -108,12 +108,12 @@ resources:
       repository: princexml
       <<: *ecr-credentials
 
-  - name: source-code-cops-resource
+  - name: source-code-corgi-resource
     type: git
     source:
       uri: https://github.com/openstax/output-producer-resource.git
       branch: master
-  - name: docker-hub-image-cops-resource
+  - name: docker-hub-image-corgi-resource
     type: registry-image
     source:
       repository: openstax/output-producer-resource
@@ -203,6 +203,7 @@ jobs:
     plan:
       - in_parallel:
         - get: image-builder
+        - get: source-code-corgi
         - get: source-code-richb-press
           trigger: true
         
@@ -228,6 +229,7 @@ jobs:
                 cat > docker-config/config.json <<EOF
                 { "auths": { "https://index.docker.io/v1/": { "auth": "$AUTH", "email": "devops@openstax.org" }}}
                 EOF
+      
       - task: report-versions-and-create-tag
         config:
           platform: linux
@@ -238,10 +240,10 @@ jobs:
               <<: *docker-credentials
           inputs:
             - name: source-code-nebuchadnezzar
-            - name: source-code-cops
+            - name: source-code-corgi
             - name: source-code-mathify
             - name: source-code-princexml
-            - name: source-code-cops-resource
+            - name: source-code-corgi-resource
             - name: source-code-cnx-recipes
             - name: source-code-kitchen-recipes
             - name: source-code-xhtml-validator
@@ -255,10 +257,10 @@ jobs:
               - -cxe
               - |
                 echo revision_nebuchadnezzar=$(git --git-dir=source-code-nebuchadnezzar/.git rev-parse --short HEAD) >> labels/labels
-                echo revision_cops=$(git --git-dir=source-code-cops/.git rev-parse --short HEAD) >> labels/labels
+                echo revision_corgi=$(git --git-dir=source-code-corgi/.git rev-parse --short HEAD) >> labels/labels
                 echo revision_mathify=$(git --git-dir=source-code-mathify/.git rev-parse --short HEAD) >> labels/labels
                 echo revision_princexml=$(git --git-dir=source-code-princexml/.git rev-parse --short HEAD) >> labels/labels
-                echo revision_cops_resource=$(git --git-dir=source-code-cops-resource/.git rev-parse --short HEAD) >> labels/labels
+                echo revision_corgi_resource=$(git --git-dir=source-code-corgi-resource/.git rev-parse --short HEAD) >> labels/labels
                 echo revision_cnx_recipes=$(git --git-dir=source-code-cnx-recipes/.git rev-parse --short HEAD) >> labels/labels
                 echo revision_kitchen_recipes=$(git --git-dir=source-code-kitchen-recipes/.git rev-parse --short HEAD) >> labels/labels
                 echo revision_xhtml_validator=$(git --git-dir=source-code-xhtml-validator/.git rev-parse --short HEAD) >> labels/labels
@@ -270,25 +272,60 @@ jobs:
 
                 cat tags/tags
                 cat labels/labels
-      
-      - task: build-richb-press
-        privileged: true
-        image: image-builder
-        output_mapping: { image: built-image-richb-press }
-        config:
-          params:
-            LABELS_FILE: labels/labels
-            DOCKER_CONFIG: docker-config
-            CONTEXT: source-code-richb-press
-          inputs:
-            - name: labels
-            - name: docker-config
-            - name: source-code-richb-press
-            <<: *image-build-config-common
+      - in_parallel:
+          fail_fast: true
+          limit: 2
+          steps:
+            - task: build-richb-press
+              privileged: true
+              image: image-builder
+              output_mapping: { image: built-image-richb-press }
+              config:
+                params:
+                  LABELS_FILE: labels/labels
+                  DOCKER_CONFIG: docker-config
+                  CONTEXT: source-code-richb-press
+                inputs:
+                  - name: labels
+                  - name: docker-config
+                  - name: source-code-richb-press
+                <<: *image-build-config-common
+            
+            - task: build-corgi-frontend
+              privileged: true
+              image: image-builder
+              output_mapping: { image: built-image-corgi-frontend }
+              config:
+                params:
+                  LABELS_FILE: labels/labels
+                  DOCKER_CONFIG: docker-config
+                  CONTEXT: source-code-corgi/frontend
+                inputs:
+                  - name: labels
+                  - name: docker-config
+                  - name: source-code-corgi
+                <<: *image-build-config-common
+            
+            - task: build-corgi-backend
+              privileged: true
+              image: image-builder
+              output_mapping: { image: built-image-corgi-backend }
+              config:
+                params:
+                  LABELS_FILE: labels/labels
+                  DOCKER_CONFIG: docker-config
+                  CONTEXT: source-code-corgi/backend
+                  DOCKERFILE: source-code-corgi/backend/backend.dockerfile
+                inputs:
+                  - name: labels
+                  - name: docker-config
+                  - name: source-code-corgi
+                <<: *image-build-config-common
 
       - in_parallel:
           fail_fast: true
           limit: 2
+          steps:
             - put: docker-hub-image-richb-press
               params: 
                 image: built-image-richb-press/image.tar
@@ -297,5 +334,46 @@ jobs:
             - put: ecr-image-richb-press
               params: 
                 image: built-image-richb-press/image.tar
+                additional_tags: tags/tags
+              get_params: { skip_download: true }
+            - put: docker-hub-image-corgi-resource
+              params: 
+                image: built-image-corgi-resource/image.tar
+                additional_tags: tags/tags
+              get_params: { skip_download: true }
+            - put: ecr-image-corgi-resource
+              params: 
+                image: built-image-corgi-resource/image.tar
+                additional_tags: tags/tags
+              get_params: { skip_download: true }
+            - put: docker-hub-image-corgi-frontend
+              params: 
+                image: built-image-corgi-frontend/image.tar
+                additional_tags: tags/tags
+              get_params: { skip_download: true }
+            - put: ecr-image-corgi-frontend
+              params: 
+                image: built-image-corgi-frontend/image.tar
+                additional_tags: tags/tags
+              get_params: { skip_download: true }
+
+      # Run this last because https://github.com/openstax/auto-deploy-corgi 
+      # reads the corgi-backend tag to determine what to deploy.
+      # And if one other other repos fails then this step should not run.
+      # Otherwise, the auto-deploy will succeed but when a staging pipeline
+      # starts up it will fail because the docker image does not exist.
+      - in_parallel:
+          fail_fast: true
+          limit: 2
+          steps:
+            
+            - put: docker-hub-image-corgi-backend
+              params: 
+                image: built-image-corgi-backend/image.tar
+                additional_tags: tags/tags
+              get_params: { skip_download: true }
+            - put: ecr-image-corgi-backend
+              params: 
+                image: built-image-corgi-backend/image.tar
                 additional_tags: tags/tags
               get_params: { skip_download: true }
