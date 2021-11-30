@@ -204,24 +204,9 @@ jobs:
     plan:
       - in_parallel:
         - get: image-builder
-        - get: source-code-nebuchadnezzar
-          trigger: true
-        - get: source-code-cops
-          trigger: true
-        - get: source-code-mathify
-          trigger: true
-        - get: source-code-princexml
-          trigger: true
-        - get: source-code-cops-resource
-          trigger: true
-        - get: source-code-cnx-recipes
-          trigger: true
-        - get: source-code-kitchen-recipes
-          trigger: true
-        - get: source-code-xhtml-validator
-          trigger: true
         - get: source-code-richb-press
           trigger: true
+        
       # Use this task until buildkit + oci-build-task support docker hub auth
       - task: generate-dockerhub-config
         config:
@@ -286,265 +271,25 @@ jobs:
 
                 cat tags/tags
                 cat labels/labels
-      - in_parallel:
-          fail_fast: true
-          limit: 2
-          steps:
-            - task: build-nebuchadnezzar
-              privileged: true
-              image: image-builder
-              output_mapping: { image: built-image-nebuchadnezzar }
-              config:
-                params:
-                  LABELS_FILE: labels/labels
-                  DOCKER_CONFIG: docker-config
-                  CONTEXT: source-code-nebuchadnezzar
-                inputs:
-                  - name: labels
-                  - name: docker-config
-                  - name: source-code-nebuchadnezzar
-                <<: *image-build-config-common
-            - task: build-cops-frontend
-              privileged: true
-              image: image-builder
-              output_mapping: { image: built-image-cops-frontend }
-              config:
-                params:
-                  LABELS_FILE: labels/labels
-                  DOCKER_CONFIG: docker-config
-                  CONTEXT: source-code-cops/frontend
-                inputs:
-                  - name: labels
-                  - name: docker-config
-                  - name: source-code-cops
-                <<: *image-build-config-common
-            - task: build-cops-backend
-              privileged: true
-              image: image-builder
-              output_mapping: { image: built-image-cops-backend }
-              config:
-                params:
-                  LABELS_FILE: labels/labels
-                  DOCKER_CONFIG: docker-config
-                  CONTEXT: source-code-cops/backend
-                  DOCKERFILE: source-code-cops/backend/backend.dockerfile
-                inputs:
-                  - name: labels
-                  - name: docker-config
-                  - name: source-code-cops
-                <<: *image-build-config-common
-            - task: build-cops-bakery-scripts
-              privileged: true
-              image: image-builder
-              output_mapping: { image: built-image-cops-bakery-scripts }
-              config:
-                params:
-                  LABELS_FILE: labels/labels
-                  DOCKER_CONFIG: docker-config
-                  CONTEXT: source-code-cops/bakery/src/scripts
-                inputs:
-                  - name: labels
-                  - name: docker-config
-                  - name: source-code-cops
-                <<: *image-build-config-common
-            - task: build-mathify
-              privileged: true
-              image: image-builder
-              output_mapping: { image: built-image-mathify }
-              config:
-                params:
-                  LABELS_FILE: labels/labels
-                  DOCKER_CONFIG: docker-config
-                  CONTEXT: source-code-mathify
-                inputs:
-                  - name: labels
-                  - name: docker-config
-                  - name: source-code-mathify
-                <<: *image-build-config-common
-            - task: build-princexml
-              privileged: true
-              image: image-builder
-              output_mapping: { image: built-image-princexml }
-              config:
-                params:
-                  LABELS_FILE: labels/labels
-                  DOCKER_CONFIG: docker-config
-                  CONTEXT: source-code-princexml
-                inputs:
-                  - name: labels
-                  - name: docker-config
-                  - name: source-code-princexml
-                <<: *image-build-config-common
-            - task: build-cops-resource
-              privileged: true
-              image: image-builder
-              output_mapping: { image: built-image-cops-resource }
-              config:
-                params:
-                  LABELS_FILE: labels/labels
-                  DOCKER_CONFIG: docker-config
-                  CONTEXT: source-code-cops-resource
-                inputs:
-                  - name: labels
-                  - name: docker-config
-                  - name: source-code-cops-resource
-                <<: *image-build-config-common
-            - task: build-cnx-recipes-output
-              privileged: true
-              image: image-builder
-              output_mapping: { image: built-image-cnx-recipes-output }
-              config:
-                params:
-                  LABELS_FILE: labels/labels
-                  DOCKER_CONFIG: docker-config
-                  CONTEXT: source-code-cnx-recipes
-                  DOCKERFILE: source-code-cnx-recipes/outputs.dockerfile
-                inputs:
-                  - name: labels
-                  - name: docker-config
-                  - name: source-code-cnx-recipes
-                <<: *image-build-config-common
-            - task: build-kitchen-recipes
-              privileged: true
-              image: image-builder
-              output_mapping: { image: built-image-kitchen-recipes }
-              config:
-                params:
-                  LABELS_FILE: labels/labels
-                  DOCKER_CONFIG: docker-config
-                  CONTEXT: source-code-kitchen-recipes
-                  TARGET: runtime-env
-                  DOCKERFILE: source-code-kitchen-recipes/docker/Dockerfile
-                inputs:
-                  - name: labels
-                  - name: docker-config
-                  - name: source-code-kitchen-recipes
-                <<: *image-build-config-common
-            - task: build-xthml-validator
-              privileged: true
-              image: image-builder
-              output_mapping: { image: built-image-xhtml-validator }
-              config:
-                params:
-                  LABELS_FILE: labels/labels
-                  DOCKER_CONFIG: docker-config
-                  CONTEXT: source-code-xhtml-validator
-                inputs:
-                  - name: labels
-                  - name: docker-config
-                  - name: source-code-xhtml-validator
-                <<: *image-build-config-common
-
-            - task: build-richb-press
-              privileged: true
-              image: image-builder
-              output_mapping: { image: built-image-richb-press }
-              config:
-                params:
-                  LABELS_FILE: labels/labels
-                  DOCKER_CONFIG: docker-config
-                  CONTEXT: source-code-richb-press
-                inputs:
-                  - name: labels
-                  - name: docker-config
-                  - name: source-code-richb-press
-                <<: *image-build-config-common
-
+      
+      - task: build-richb-press
+        privileged: true
+        image: image-builder
+        output_mapping: { image: built-image-richb-press }
+        config:
+          params:
+            LABELS_FILE: labels/labels
+            DOCKER_CONFIG: docker-config
+            CONTEXT: source-code-richb-press
+          inputs:
+            - name: labels
+            - name: docker-config
+            - name: source-code-richb-press
+            <<: *image-build-config-common
 
       - in_parallel:
           fail_fast: true
           limit: 2
-          steps:
-            - put: docker-hub-image-nebuchadnezzar
-              params: 
-                image: built-image-nebuchadnezzar/image.tar
-                additional_tags: tags/tags
-              get_params: { skip_download: true }
-            - put: ecr-image-nebuchadnezzar
-              params: 
-                image: built-image-nebuchadnezzar/image.tar
-                additional_tags: tags/tags
-              get_params: { skip_download: true }
-            - put: docker-hub-image-cops-frontend
-              params: 
-                image: built-image-cops-frontend/image.tar
-                additional_tags: tags/tags
-              get_params: { skip_download: true }
-            - put: ecr-image-corgi-frontend
-              params: 
-                image: built-image-cops-frontend/image.tar
-                additional_tags: tags/tags
-              get_params: { skip_download: true }
-            - put: docker-hub-image-cops-backend
-              params: 
-                image: built-image-cops-backend/image.tar
-                additional_tags: tags/tags
-              get_params: { skip_download: true }
-            - put: ecr-image-corgi-backend
-              params: 
-                image: built-image-cops-backend/image.tar
-                additional_tags: tags/tags
-              get_params: { skip_download: true }
-            - put: docker-hub-image-mathify
-              params: 
-                image: built-image-mathify/image.tar
-                additional_tags: tags/tags
-              get_params: { skip_download: true }
-            - put: ecr-image-mathify
-              params: 
-                image: built-image-mathify/image.tar
-                additional_tags: tags/tags
-              get_params: { skip_download: true }
-            - put: docker-hub-image-princexml
-              params: 
-                image: built-image-princexml/image.tar
-                additional_tags: tags/tags
-              get_params: { skip_download: true }
-            - put: ecr-image-princexml
-              params: 
-                image: built-image-princexml/image.tar
-                additional_tags: tags/tags
-              get_params: { skip_download: true }
-            - put: docker-hub-image-cops-resource
-              params: 
-                image: built-image-cops-resource/image.tar
-                additional_tags: tags/tags
-              get_params: { skip_download: true }
-            - put: ecr-image-corgi-resource
-              params: 
-                image: built-image-cops-resource/image.tar
-                additional_tags: tags/tags
-              get_params: { skip_download: true }
-            - put: docker-hub-image-cnx-recipes-output
-              params: 
-                image: built-image-cnx-recipes-output/image.tar
-                additional_tags: tags/tags
-              get_params: { skip_download: true }
-            - put: ecr-image-cnx-recipes-output
-              params: 
-                image: built-image-cnx-recipes-output/image.tar
-                additional_tags: tags/tags
-              get_params: { skip_download: true }
-            - put: docker-hub-image-kitchen-recipes
-              params:
-                image: built-image-kitchen-recipes/image.tar
-                additional_tags: tags/tags
-              get_params: { skip_download: true }
-            - put: ecr-image-kitchen-recipes
-              params:
-                image: built-image-kitchen-recipes/image.tar
-                additional_tags: tags/tags
-              get_params: { skip_download: true }
-            - put: docker-hub-image-xhtml-validator
-              params: 
-                image: built-image-xhtml-validator/image.tar
-                additional_tags: tags/tags
-              get_params: { skip_download: true }
-            - put: ecr-image-xhtml-validator
-              params: 
-                image: built-image-xhtml-validator/image.tar
-                additional_tags: tags/tags
-              get_params: { skip_download: true }
             - put: docker-hub-image-richb-press
               params: 
                 image: built-image-richb-press/image.tar
@@ -553,25 +298,5 @@ jobs:
             - put: ecr-image-richb-press
               params: 
                 image: built-image-richb-press/image.tar
-                additional_tags: tags/tags
-              get_params: { skip_download: true }
-
-      # Run this last because https://github.com/openstax/auto-deploy-corgi 
-      # reads the bakery-scripts tag to determine what to deploy.
-      # And if one other other repos fails then this step should not run.
-      # Otherwise, the auto-deploy will succeed but when a staging pipeline
-      # starts up it will fail because the docker image does not exist.
-      - in_parallel:
-          fail_fast: true
-          limit: 2
-          steps:
-            - put: docker-hub-image-cops-bakery-scripts
-              params: 
-                image: built-image-cops-bakery-scripts/image.tar
-                additional_tags: tags/tags
-              get_params: { skip_download: true }
-            - put: ecr-image-corgi-bakery-scripts
-              params: 
-                image: built-image-cops-bakery-scripts/image.tar
                 additional_tags: tags/tags
               get_params: { skip_download: true }
