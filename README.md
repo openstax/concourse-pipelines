@@ -1,5 +1,8 @@
 ## Overview
 
+> :warning:Warning:warning:: 
+>The pipelines located in this repository that are currently used are being migrated to [ce-pipelines](https://github.com/openstax/ce-pipelines) repository. Pipelines that are not migrated are consiered Legacy pipelines and this repo will be archived when Legacy is shutdown in July 2022.
+
 The repository contains various [Concourse CI](https://concourse-ci.org) pipeline definitions. Most pipeline definitions live with the code they are intended to be used with, however some pipelines do not have code. This space is used to house those pipelines that are code or service independent.
 
 ## Releasing of Python Packages
